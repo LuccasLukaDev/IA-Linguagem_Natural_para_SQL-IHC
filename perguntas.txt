@@ -1,0 +1,7 @@
+Perguntar sobre essass dependencias e suas responsabilidades:
+whisper - 
+ffmpeg - 
+dspy - 
+telebot - 
+json - 
+
