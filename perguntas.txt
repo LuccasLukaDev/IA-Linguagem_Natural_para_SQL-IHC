@@ -30,3 +30,34 @@ ffmpeg -
 dspy - 
 telebot - 
 json - 
+
+                   ARQUITETURA DO PROJETO
+                    ┌──────────────────┐
+                    │      SQLite      │
+                    │                  │
+                    │ produtos         │
+                    │ ├─ id            │
+                    │ ├─ nome          │
+                    │ ├─ fabricante    │
+                    │ ├─ quantidade    │
+                    │ └─ ...           │
+                    └────────┬─────────┘
+                             │
+                       obtém schema
+                             │
+                             ▼
+                    ┌──────────────────┐
+                    │      Gemma       │
+                    │      + DSPy      │
+                    └────────┬─────────┘
+                             │
+                       gera SQL
+                             │
+                             ▼
+                    ┌──────────────────┐
+                    │      SQLite      │
+                    │ executa SQL      │
+                    └────────┬─────────┘
+                             │
+                             ▼
+                         resultado

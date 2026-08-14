@@ -21,10 +21,8 @@ dspy.configure(lm=lm)
 # Define o que a IA deve fazer
 class TextToSQL(dspy.Signature):
     """
-    Generate SQL from natural language.
-
-    Database schema:
-    - produtos: nome, departamento
+    Generate a valid SQLite SQL query from a natural language question.
+    Use only the tables and columns provided in the database schema.
     """
 
     dbschema = dspy.InputField(desc="Database schema")
@@ -49,8 +47,15 @@ class ReliableSQLGenerator(dspy.Module):
 # Schema do banco que será informado para a IA
 schema = """
 CREATE TABLE produtos (
+    id INTEGER PRIMARY KEY,
     nome VARCHAR(50),
-    departamento VARCHAR(50)
+    departamento VARCHAR(50),
+    fabricante TEXT,
+    data_venc TEXT,
+    data_fabri TEXT,
+    cod_barra TEXT,
+    origem TEXT,
+    quantidade INTEGER
 );
 """
 
