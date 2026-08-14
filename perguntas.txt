@@ -1,7 +1,32 @@
+EXPLICAÇÃO DO QUE É PRA FAZER
+
+IHC 
+ 
+Estou passando um agente que implementei completo text2sql integrado com telegram, voz, BD, CoT etc etc... vocês precisam:
+ 
+1 encapsular o BD, expor ele usando fastAPI com uma rota get e deixá-lo mais complexo (Estoque: produto, departamento, id, data fabri, data venci...)
+ 
+2 colocar try catch no próprio gerador e conferir o sql gerado em um sqlite in memory para pegar exceptions
+ 
+3 colocar checagem de execução apenas de select no próprio gerador
+ 
+4 otimizar um programa (usando gepa por exemplo)
+ 
+5 arrumar o código deixando tudo encapsulado
+ 
+6 avaliar resultados
+ 
+---- até início de setembro ---
+ 
+7 usar RLM ao invés de CoT para que libs python recursivamente gerem sql bons
+ 
+--- até novembro ---
+ 
+
+
 Perguntar sobre essass dependencias e suas responsabilidades:
 whisper - 
 ffmpeg - 
 dspy - 
 telebot - 
 json - 
-
