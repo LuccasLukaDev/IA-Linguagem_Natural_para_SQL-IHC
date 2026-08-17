@@ -1,5 +1,5 @@
-from ia import ReliableSQLGenerator
-from banco import executar_sql
+from IA.ia import ReliableSQLGenerator
+from bd.banco import executar_sql
 
 
 schema = """
@@ -20,14 +20,17 @@ CREATE TABLE produtos (
 generator = ReliableSQLGenerator()
 
 
-question = "qual o departamento do sabonete?"
+question = "qual o departamento do sabonete? mostre apenas 1 se tiver algum repetido"
 
 
 # IA gera o SQL
 result = generator(schema, question)
 
 
-print("SQL gerado:")
+print("\nReasoning:")
+print(result.completions.reasoning)
+
+print("\nSQL gerado:")
 print(result.sql_query)
 
 
@@ -37,3 +40,4 @@ resultado = executar_sql(result.sql_query)
 
 print("\nResultado do banco:")
 print(resultado)
+print()

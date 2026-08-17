@@ -29,7 +29,7 @@ whisper -
 ffmpeg - 
 dspy - 
 telebot - 
-json - 
+json - Dependencia responsavel pelo 
 
                    ARQUITETURA DO PROJETO
                     ┌──────────────────┐
