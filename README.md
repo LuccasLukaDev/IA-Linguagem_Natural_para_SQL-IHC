@@ -33,6 +33,7 @@ Projeto/
 │   │
 │   ├── database/
 │   │   └── connection.py
+│   │   └── seed.py
 │   │
 │   ├── docs/
 │   │
@@ -41,8 +42,10 @@ Projeto/
 │   │
 │   ├── schemas/
 │   │   └── pergunta.py
+│   │   └── produto.py
 │   │
 │   ├── services/
+│   │   └── listar_produto_service.py
 │   │   └── sql_service.py
 │   │
 │   ├── __init__.py
@@ -50,8 +53,7 @@ Projeto/
 │
 ├── .venv/
 │
-├── lojas.db
-├── seed.py
+├── .gitignore
 ├── requirements.txt
 └── README.md
 ```
