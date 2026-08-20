@@ -90,11 +90,9 @@ def generate(question: str):
 
         sql = prediction.sql_query.strip()
 
-        # Verifica se é SELECT
         if not sql.upper().startswith("SELECT"):
             raise ValueError("Apenas consultas SELECT são permitidas.")
 
-        # Valida o SQL usando SQLite em memória
         valido, erro = validar_sql(sql, schema)
 
         if not valido:
