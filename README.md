@@ -1,144 +1,163 @@
-# IA-Linguagem_Natural_para_SQL-IHC
+# 🤖 Linguagem Natural para SQL
 
-## Conversão de Áudio e Texto em Linguagem Natural para SQL com modelo de IA
+Projeto desenvolvido para transformar perguntas feitas em **linguagem natural** em consultas **SQL**, utilizando inteligência artificial.
 
-Projeto desenvolvido para a disciplina de **Interação Humano-Computador (IHC)** com o objetivo de permitir que o usuário faça perguntas utilizando **linguagem natural**, enquanto um modelo de Inteligência Artificial interpreta a pergunta e gera automaticamente uma consulta SQL para um banco de dados SQLite.
+A aplicação recebe uma pergunta através de uma API desenvolvida com **FastAPI**, utiliza o **DSPy** para gerar a consulta SQL através de um modelo de linguagem local e executa essa consulta em um banco de dados **SQLite**.
 
-O projeto utiliza um **modelo de IA local**, executado através do **Jan.ai**, evitando a necessidade de utilizar uma API de IA hospedada externamente.
+> ⚠️ O projeto atualmente trabalha apenas com perguntas em texto.
+> A funcionalidade de áudio utilizando Whisper ainda não está implementada nesta versão.
 
 ---
 
-## 🎯 Objetivo
+# 📌 Tecnologias utilizadas
 
-O objetivo principal do projeto é criar uma interface capaz de receber perguntas como:
+- 🐍 Python 3.14
+- ⚡ FastAPI
+- 🚀 Uvicorn
+- 🧠 DSPy
+- 🤖 Gemma (modelo local)
+- 🗄️ SQLite
+- 📡 Thunder Client / Swagger
+- 🧪 Pydantic
 
-> "Qual o departamento do sabonete?"
+---
 
-e transformá-las automaticamente em uma consulta SQL equivalente, por exemplo:
-
-```sql
-SELECT departamento FROM produtos WHERE nome = 'sabonete';
-```
-
-Depois disso, a consulta gerada pela IA é enviada para o banco de dados SQLite e o resultado é retornado para o usuário.
-
-O fluxo principal do sistema é:
+# 📂 Estrutura do projeto
 
 ```text
-Usuário
-   │
-   │ Pergunta em linguagem natural
-   ▼
-ReliableSQLGenerator
-   │
-   │ Modelo de IA local
-   ▼
-Jan.ai
-   │
-   │ SQL gerado
-   ▼
-SQLite
-   │
-   │ Resultado da consulta
-   ▼
-Usuário
-```
-
----
-
-## 🧠 Tecnologias utilizadas
-
-* **Python**
-* **DSPy**
-* **SQLite**
-* **Jan.ai**
-* **Gemma**
-* **OpenAI-compatible API**
-* **Whisper** — utilizado para reconhecimento de áudio
-* **PyTelegramBotAPI** — utilizado para integração com Telegram
-
----
-
-## 📁 Estrutura do projeto
-
-```text
-IA-Linguagem_Natural_para_SQL-IHC/
+Projeto/
 │
-├── IA/
-│   └── ia.py
+├── app/
+│   │
+│   ├── database/
+│   │   └── connection.py
+│   │
+│   ├── docs/
+│   │
+│   ├── routers/
+│   │   └── produtos.py
+│   │
+│   ├── schemas/
+│   │   └── pergunta.py
+│   │
+│   ├── services/
+│   │   └── sql_service.py
+│   │
+│   ├── __init__.py
+│   └── main.py
 │
-├── bd/
-│   ├── banco.py
-│   └── lojas.db
+├── .venv/
 │
-├── main.py
+├── lojas.db
 │
-├── .gitignore
+├── requirements.txt
 │
 └── README.md
 ```
 
+## 📁 Descrição das pastas
+
+### `app/`
+
+Contém todo o código principal da aplicação FastAPI.
+
+### `app/database/`
+
+Responsável pela conexão e inicialização do banco SQLite.
+
+### `app/routers/`
+
+Contém as rotas da API.
+
+Exemplo:
+
+```text
+POST /produtos/perguntar
+```
+
+### `app/schemas/`
+
+Contém os modelos de dados utilizados pela API através do Pydantic.
+
+### `app/services/`
+
+Contém a lógica responsável por transformar a pergunta em SQL e executar a consulta no banco.
+
+### `app/docs/`
+
+Documentação adicional do projeto.
+
 ### `main.py`
 
-É o arquivo responsável por executar o fluxo principal da aplicação.
+Arquivo principal responsável por iniciar a aplicação FastAPI e registrar os routers.
 
-Ele:
+### `lojas.db`
 
-1. Define o schema do banco de dados.
-2. Cria uma pergunta em linguagem natural.
-3. Envia a pergunta e o schema para a IA.
-4. Recebe a consulta SQL gerada.
-5. Executa a consulta no SQLite.
-6. Exibe o resultado.
+Banco de dados SQLite utilizado pelo projeto.
 
 ---
 
-### `IA/ia.py`
+# 🧠 Como o projeto funciona
 
-Contém a configuração do modelo de Inteligência Artificial e a implementação responsável por transformar linguagem natural em SQL.
+O funcionamento básico é:
 
-O projeto utiliza o **DSPy** para definir a assinatura da tarefa:
-
-```python
-class TextToSQL(dspy.Signature):
+```text
+Pergunta do usuário
+        │
+        ▼
+     FastAPI
+        │
+        ▼
+    Router
+        │
+        ▼
+    Service
+        │
+        ▼
+      DSPy
+        │
+        ▼
+Modelo Gemma local
+        │
+        ▼
+    Consulta SQL
+        │
+        ▼
+     SQLite
+        │
+        ▼
+     Resultado
+        │
+        ▼
+     FastAPI
+        │
+        ▼
+      JSON
 ```
 
-A IA recebe:
+Por exemplo, o usuário envia:
 
-* Schema do banco de dados
-* Pergunta do usuário
-
-e retorna:
-
-* Consulta SQL
-
-O `ReliableSQLGenerator` utiliza `ChainOfThought` para gerar a resposta:
-
-```python
-self.generate_sql = dspy.ChainOfThought(TextToSQL)
+```text
+Qual o departamento do sabonete?
 ```
+
+O modelo pode gerar:
+
+```sql
+SELECT departamento
+FROM produtos
+WHERE nome = 'sabonete';
+```
+
+A consulta é executada no SQLite e a API retorna o resultado.
 
 ---
 
-### `bd/banco.py`
-
-Responsável pela comunicação com o banco de dados SQLite.
-
-A função:
-
-```python
-executar_sql(sql)
-```
-
-recebe uma consulta SQL, executa no banco `lojas.db` e retorna os resultados.
-
----
-
-## 🗄️ Banco de dados
+# 🗄️ Banco de dados
 
 O projeto utiliza SQLite.
 
-A tabela utilizada atualmente é:
+A tabela principal é:
 
 ```sql
 CREATE TABLE produtos (
@@ -154,41 +173,81 @@ CREATE TABLE produtos (
 );
 ```
 
-### Colunas
+## Colunas
 
-| Coluna         | Tipo        | Descrição                               |
-| -------------- | ----------- | --------------------------------------- |
-| `id`           | INTEGER     | Identificador único do produto          |
-| `nome`         | VARCHAR(50) | Nome do produto                         |
-| `departamento` | VARCHAR(50) | Departamento ao qual o produto pertence |
-| `fabricante`   | TEXT        | Fabricante do produto                   |
-| `data_venc`    | TEXT        | Data de vencimento                      |
-| `data_fabri`   | TEXT        | Data de fabricação                      |
-| `cod_barra`    | TEXT        | Código de barras                        |
-| `origem`       | TEXT        | Origem do produto                       |
-| `quantidade`   | INTEGER     | Quantidade disponível                   |
+| Coluna | Tipo | Descrição |
+|---|---|---|
+| `id` | INTEGER | Identificador do produto |
+| `nome` | VARCHAR(50) | Nome do produto |
+| `departamento` | VARCHAR(50) | Departamento do produto |
+| `fabricante` | TEXT | Fabricante |
+| `data_venc` | TEXT | Data de vencimento |
+| `data_fabri` | TEXT | Data de fabricação |
+| `cod_barra` | TEXT | Código de barras |
+| `origem` | TEXT | Origem do produto |
+| `quantidade` | INTEGER | Quantidade disponível |
 
 ---
 
-# 🤖 Configuração da Inteligência Artificial
+# 🐍 Configuração do Python
 
-O projeto utiliza o **Jan.ai** para executar o modelo de linguagem localmente.
+Recomenda-se utilizar um ambiente virtual para instalar as dependências do projeto.
 
-O Jan.ai deve estar instalado e configurado para disponibilizar uma API compatível com a API da OpenAI.
+## Criando o ambiente virtual
 
-Neste projeto, a API é acessada através de:
+Na pasta principal do projeto:
 
-```text
-http://localhost:1337/v1
+```powershell
+python -m venv .venv
 ```
 
-O modelo utilizado atualmente é:
+---
 
-```text
-gemma-4-E2B-it-IQ4_XS
+# ▶️ Ativando a virtual environment
+
+No Windows PowerShell:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
 ```
 
-A configuração utilizada no DSPy é:
+Depois da ativação, o terminal deverá mostrar:
+
+```text
+(.venv) PS C:\...\Projeto>
+```
+
+Isso significa que o ambiente virtual está ativo.
+
+---
+
+# 📦 Instalando as dependências
+
+Com a `.venv` ativada:
+
+```powershell
+pip install -r requirements.txt
+```
+
+O arquivo `requirements.txt` contém:
+
+```text
+fastapi
+uvicorn
+dspy
+```
+
+O SQLite não precisa ser instalado através do `pip`, pois o módulo `sqlite3` já faz parte da instalação padrão do Python.
+
+---
+
+# 🤖 Configuração do modelo local
+
+O projeto utiliza um modelo Gemma executado localmente.
+
+O DSPy está configurado para acessar o modelo através de uma API compatível com OpenAI.
+
+Configuração utilizada:
 
 ```python
 lm = dspy.LM(
@@ -196,370 +255,725 @@ lm = dspy.LM(
     api_base="http://localhost:1337/v1",
     api_key="not-needed"
 )
-
-dspy.configure(lm=lm)
 ```
 
-> O nome do modelo precisa ser exatamente igual ao identificador disponibilizado pelo servidor local do Jan.ai.
+Isso significa que o servidor do modelo precisa estar rodando na porta:
 
----
-
-# 📦 Instalação
-
-## 1. Clonar o repositório
-
-```bash
-git clone https://github.com/LuccasLukaDev/IA-Linguagem_Natural_para_SQL-IHC.git
+```text
+1337
 ```
 
-Entre na pasta do projeto:
-
-```bash
-cd IA-Linguagem_Natural_para_SQL-IHC
-```
-
----
-
-## 2. Criar um ambiente virtual
-
-No Windows:
-
-```powershell
-python -m venv .venv
-```
-
-Ative o ambiente:
-
-```powershell
-.venv\Scripts\activate
-```
-
-No Linux:
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-```
-
----
-
-## 3. Instalar as dependências
-
-Instale o DSPy:
-
-```bash
-pip install dspy
-```
-
-Caso o projeto de reconhecimento de áudio seja utilizado:
-
-```bash
-pip install -U openai-whisper
-```
-
-Para a integração com Telegram:
-
-```bash
-pip install pytelegrambotapi
-```
-
-O SQLite já possui suporte através da biblioteca padrão `sqlite3` do Python.
-
----
-
-# 🖥️ Configuração do Jan.ai
-
-Depois de instalar o Jan.ai:
-
-1. Abra o Jan.ai.
-2. Instale um modelo compatível.
-3. Inicie o servidor local da API.
-4. Verifique se o servidor está disponível na porta `1337`.
-
-A aplicação espera encontrar a API em:
+O endereço utilizado pela aplicação é:
 
 ```text
 http://localhost:1337/v1
 ```
 
-É possível verificar se o servidor está funcionando acessando:
+## Testando o servidor do modelo
 
-```text
-http://localhost:1337/v1/models
-```
-
-No PowerShell, por exemplo:
+No PowerShell:
 
 ```powershell
-Invoke-RestMethod http://localhost:1337/v1/models
+Test-NetConnection localhost -Port 1337
 ```
 
-Se o servidor estiver funcionando corretamente, deverá ser retornada a lista de modelos disponíveis.
+O resultado esperado é:
+
+```text
+TcpTestSucceeded : True
+```
+
+Caso apareça:
+
+```text
+TcpTestSucceeded : False
+```
+
+o servidor do modelo local não está funcionando ou não está utilizando a porta `1337`.
 
 ---
 
-# ▶️ Executando o projeto
+# 🚀 Executando o projeto
 
-Com o ambiente virtual ativado e o Jan.ai executando o modelo, execute:
+Primeiro, abra o PowerShell na pasta principal do projeto:
 
-```bash
-python main.py
+```text
+Projeto/
 ```
 
-O programa irá:
+Ative a virtual environment:
 
-1. Enviar o schema para a IA.
-2. Enviar a pergunta.
-3. Gerar a consulta SQL.
-4. Executar a consulta no SQLite.
-5. Exibir o resultado.
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
 
-Exemplo de pergunta:
+Depois inicie o FastAPI:
+
+```powershell
+uvicorn app.main:app --reload
+```
+
+Se tudo estiver correto, aparecerá:
+
+```text
+INFO:     Uvicorn running on http://127.0.0.1:8000
+INFO:     Application startup complete.
+```
+
+A API estará disponível em:
+
+```text
+http://127.0.0.1:8000
+```
+
+---
+
+# 📚 Documentação Swagger
+
+O FastAPI disponibiliza automaticamente uma interface para testar as rotas.
+
+Abra no navegador:
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+A documentação deverá mostrar a rota:
+
+```text
+POST /produtos/perguntar
+```
+
+---
+
+# 🧪 Testando com Swagger
+
+No Swagger:
+
+1. Acesse:
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+2. Encontre:
+
+```text
+POST /produtos/perguntar
+```
+
+3. Clique em:
+
+```text
+Try it out
+```
+
+4. Envie um JSON como:
+
+```json
+{
+    "question": "qual o departamento do sabonete?"
+}
+```
+
+5. Clique em:
+
+```text
+Execute
+```
+
+A API irá enviar a pergunta para o DSPy, que utilizará o modelo local para gerar a consulta SQL.
+
+---
+
+# 🧪 Testando com Thunder Client
+
+Também é possível utilizar o Thunder Client no VS Code.
+
+## Método
+
+```text
+POST
+```
+
+## URL
+
+```text
+http://127.0.0.1:8000/produtos/perguntar
+```
+
+## Header
+
+```text
+Content-Type: application/json
+```
+
+## Body
+
+Selecione:
+
+```text
+JSON
+```
+
+e envie:
+
+```json
+{
+    "question": "qual o departamento do sabonete?"
+}
+```
+
+---
+
+# 📤 Exemplo de resposta
+
+Dependendo dos dados existentes no banco, a API pode retornar:
+
+```json
+{
+    "resultado": [
+        [
+            "higiene"
+        ]
+    ]
+}
+```
+
+Caso existam dois registros que atendam à consulta:
+
+```json
+{
+    "resultado": [
+        [
+            "higiene"
+        ],
+        [
+            "higiene"
+        ]
+    ]
+}
+```
+
+Isso acontece porque o SQLite retorna todas as linhas encontradas através do:
 
 ```python
-question = "qual o departamento do sabonete?"
+fetchall()
 ```
-
-A IA poderá gerar uma consulta semelhante a:
-
-```sql
-SELECT departamento FROM produtos WHERE nome = 'sabonete';
-```
-
-O resultado será então obtido diretamente do banco de dados.
 
 ---
 
-# 🔄 Fluxo de funcionamento
+# 🔎 Exemplos de perguntas
 
-O funcionamento pode ser dividido em três etapas principais.
-
-### 1. Linguagem natural
-
-O usuário fornece uma pergunta:
+Como o sistema utiliza linguagem natural, algumas perguntas possíveis são:
 
 ```text
 Qual o departamento do sabonete?
 ```
 
-### 2. Geração do SQL
-
-O `ReliableSQLGenerator` recebe:
+```text
+Qual o fabricante da coca?
+```
 
 ```text
-Schema do banco
-+
-Pergunta do usuário
+Qual a quantidade de água?
 ```
 
-e envia essas informações para o modelo de linguagem.
-
-O modelo gera uma consulta SQL:
-
-```sql
-SELECT departamento
-FROM produtos
-WHERE nome = 'sabonete';
+```text
+Qual a origem do sabonete?
 ```
 
-### 3. Execução
+```text
+Qual o código de barras da coca?
+```
 
-A consulta é enviada para:
+```text
+Qual a data de vencimento do sabonete?
+```
+
+```text
+Quais produtos pertencem ao departamento de bebidas?
+```
+
+O modelo irá interpretar a pergunta e tentar gerar uma consulta SQL correspondente.
+
+---
+
+# 🧠 DSPy
+
+O DSPy é responsável por estruturar a interação com o modelo de linguagem.
+
+O projeto utiliza uma assinatura semelhante a:
 
 ```python
-executar_sql(result.sql_query)
+class TextToSQL(dspy.Signature):
+    """
+    Gera uma consulta SQL a partir de uma pergunta em linguagem natural.
+    """
+
+    dbschema = dspy.InputField(
+        desc="Schema do banco de dados"
+    )
+
+    question = dspy.InputField(
+        desc="Pergunta em linguagem natural"
+    )
+
+    sql_query = dspy.OutputField(
+        desc="Consulta SQL válida para SQLite"
+    )
 ```
 
-O SQLite executa a consulta e retorna o resultado:
+O schema enviado ao modelo é:
+
+```sql
+CREATE TABLE produtos (
+    id INTEGER PRIMARY KEY,
+    nome VARCHAR(50),
+    departamento VARCHAR(50),
+    fabricante TEXT,
+    data_venc TEXT,
+    data_fabri TEXT,
+    cod_barra TEXT,
+    origem TEXT,
+    quantidade INTEGER
+);
+```
+
+Dessa forma, o modelo conhece as tabelas e colunas disponíveis para construir a consulta SQL.
+
+---
+
+# 🏗️ Service
+
+A geração da consulta SQL é realizada no service:
 
 ```text
-[("higiene",)]
+app/services/sql_service.py
+```
+
+O service possui a responsabilidade de:
+
+1. Receber a pergunta;
+2. Enviar a pergunta e o schema para o DSPy;
+3. Receber a consulta SQL gerada;
+4. Executar a consulta no SQLite;
+5. Retornar os resultados.
+
+---
+
+# 🌐 Router
+
+A rota responsável por receber as perguntas está em:
+
+```text
+app/routers/produtos.py
+```
+
+A rota é:
+
+```text
+POST /produtos/perguntar
+```
+
+Ela recebe um objeto JSON:
+
+```json
+{
+    "question": "qual o departamento do sabonete?"
+}
+```
+
+e encaminha a pergunta para o service.
+
+---
+
+# 📋 Schema
+
+O schema utilizado para validar a pergunta está em:
+
+```text
+app/schemas/pergunta.py
+```
+
+Exemplo:
+
+```python
+from pydantic import BaseModel
+
+
+class Pergunta(BaseModel):
+    question: str
+```
+
+Isso faz com que a API espere um JSON com a propriedade:
+
+```text
+question
 ```
 
 ---
 
-# 🧩 DSPy e `Prediction`
+# 🗃️ Conexão com o SQLite
 
-O DSPy retorna o resultado da execução do módulo como um objeto `Prediction`.
+A conexão com o banco está localizada em:
+
+```text
+app/database/connection.py
+```
+
+A aplicação utiliza o arquivo:
+
+```text
+lojas.db
+```
+
+O banco é criado caso ainda não exista.
+
+A tabela também é criada utilizando:
+
+```sql
+CREATE TABLE IF NOT EXISTS produtos
+```
+
+Isso evita que a aplicação tente criar novamente uma tabela que já existe.
+
+---
+
+# ⚠️ Problemas comuns
+
+## `ModuleNotFoundError: No module named 'app'`
+
+Verifique se você está executando o comando na pasta principal:
+
+```text
+Projeto/
+```
+
+e não dentro da pasta `app`.
+
+O comando correto é:
+
+```powershell
+uvicorn app.main:app --reload
+```
+
+---
+
+## `uvicorn não é reconhecido`
+
+Verifique se a virtual environment está ativada:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
+
+O terminal deve mostrar:
+
+```text
+(.venv)
+```
+
+Depois tente:
+
+```powershell
+uvicorn app.main:app --reload
+```
+
+---
+
+## `table produtos already exists`
+
+Não utilize:
+
+```sql
+CREATE TABLE produtos
+```
+
+Use:
+
+```sql
+CREATE TABLE IF NOT EXISTS produtos
+```
+
+Assim a tabela não será recriada quando o FastAPI for iniciado.
+
+---
+
+## API retorna `404 Not Found`
+
+Se acessar:
+
+```text
+http://127.0.0.1:8000/
+```
+
+e receber:
+
+```text
+404 Not Found
+```
+
+isso não significa necessariamente que o FastAPI está com problema.
+
+A aplicação pode simplesmente não possuir uma rota `/`.
+
+Para testar a API, utilize:
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+ou:
+
+```text
+http://127.0.0.1:8000/produtos/perguntar
+```
+
+---
+
+## Erro `422 Unprocessable Entity`
+
+Verifique se o JSON está correto:
+
+```json
+{
+    "question": "qual o departamento do sabonete?"
+}
+```
+
+Não envie somente:
+
+```text
+qual o departamento do sabonete?
+```
+
+O campo `question` é obrigatório.
+
+---
+
+## Erro ao conectar com o modelo
+
+Verifique se o servidor local do modelo está funcionando na porta:
+
+```text
+1337
+```
+
+Teste:
+
+```powershell
+Test-NetConnection localhost -Port 1337
+```
+
+O resultado esperado:
+
+```text
+TcpTestSucceeded : True
+```
+
+---
+
+# 🔐 Segurança
+
+Caso o projeto utilize tokens ou chaves de API, **não coloque essas informações diretamente no código ou no GitHub**.
+
+Utilize variáveis de ambiente e um arquivo `.env`.
 
 Por exemplo:
 
 ```text
-Prediction(
-    reasoning="Para encontrar o departamento do sabonete...",
-    sql_query="SELECT departamento FROM produtos WHERE nome = 'sabonete'"
-)
+MODEL_API_URL=http://localhost:1337/v1
 ```
 
-Esse objeto contém os campos produzidos pelo modelo.
-
-Neste projeto, o campo principal utilizado é:
-
-```python
-result.sql_query
-```
-
-que contém a consulta SQL gerada pela IA.
-
-O `reasoning` contém a justificativa produzida pelo `ChainOfThought`.
-
----
-
-# 🛡️ Separação entre IA e banco de dados
-
-Uma das características importantes do projeto é a separação entre o modelo de linguagem e o banco de dados.
-
-A IA **não acessa diretamente o SQLite**.
-
-O fluxo é:
+E adicione `.env` ao `.gitignore`:
 
 ```text
-                    ┌───────────────┐
-                    │      IA       │
-                    │               │
-Pergunta ──────────►│ Gera SQL      │
-                    └───────┬───────┘
-                            │
-                            │ SQL
-                            ▼
-                    ┌───────────────┐
-                    │    SQLite     │
-                    │               │
-                    │ Executa SQL   │
-                    └───────┬───────┘
-                            │
-                            │ Resultado
-                            ▼
-                         Usuário
+.env
+.venv/
+__pycache__/
 ```
-
-Dessa forma, o modelo de linguagem é responsável apenas por **interpretar a linguagem natural e gerar SQL**, enquanto o módulo de banco de dados é responsável pela execução da consulta.
 
 ---
 
-# 🎙️ Conversão de áudio
+# 🎤 Funcionalidade de voz
 
-O projeto também possui suporte para trabalhar com perguntas recebidas através de áudio.
+A versão original do projeto possuía integração com:
 
-Para isso, é utilizado o **Whisper**, responsável por converter o áudio em texto.
+- Telegram Bot
+- Whisper
+- FFmpeg
 
-O fluxo pode ser expandido para:
+Essas funcionalidades foram temporariamente deixadas de fora da versão atual.
+
+O foco atual é:
+
+```text
+Texto
+  ↓
+FastAPI
+  ↓
+DSPy
+  ↓
+Gemma
+  ↓
+SQL
+  ↓
+SQLite
+```
+
+Posteriormente, o Whisper poderá ser integrado para permitir perguntas através de áudio:
 
 ```text
 Áudio
-  │
-  ▼
+  ↓
 Whisper
-  │
-  │ Texto
-  ▼
-Modelo de IA
-  │
-  │ SQL
-  ▼
+  ↓
+Texto
+  ↓
+DSPy
+  ↓
+SQL
+  ↓
 SQLite
-  │
-  │ Resultado
-  ▼
-Usuário
 ```
-
-Assim, o usuário pode fazer uma pergunta por voz e o sistema pode utilizar o texto transcrito como entrada para o gerador de SQL.
 
 ---
 
-# ⚠️ Observações
-
-## O Jan.ai precisa estar executando
-
-A aplicação depende do servidor local do Jan.ai.
-
-Caso ele não esteja funcionando na porta `1337`, o programa não conseguirá enviar as solicitações para o modelo.
-
-Verifique:
+# 🔄 Fluxo completo da aplicação
 
 ```text
-http://localhost:1337/v1/models
+┌───────────────────────┐
+│       Usuário         │
+│                       │
+│ "Qual o departamento  │
+│      do sabonete?"    │
+└───────────┬───────────┘
+            │
+            ▼
+┌───────────────────────┐
+│       FastAPI         │
+│                       │
+│ POST /produtos/       │
+│ perguntar             │
+└───────────┬───────────┘
+            │
+            ▼
+┌───────────────────────┐
+│        Router         │
+└───────────┬───────────┘
+            │
+            ▼
+┌───────────────────────┐
+│        Service        │
+│                       │
+│ Recebe pergunta +     │
+│ schema do banco       │
+└───────────┬───────────┘
+            │
+            ▼
+┌───────────────────────┐
+│         DSPy          │
+└───────────┬───────────┘
+            │
+            ▼
+┌───────────────────────┐
+│     Gemma local       │
+│                       │
+│ Gera SQL              │
+└───────────┬───────────┘
+            │
+            ▼
+┌───────────────────────┐
+│        SQLite         │
+│                       │
+│ Executa SQL           │
+└───────────┬───────────┘
+            │
+            ▼
+┌───────────────────────┐
+│       Resultado       │
+│                       │
+│ ["higiene"]           │
+└───────────┬───────────┘
+            │
+            ▼
+┌───────────────────────┐
+│       FastAPI         │
+│                       │
+│ Retorna JSON          │
+└───────────────────────┘
 ```
 
 ---
 
-## O modelo precisa estar disponível
+# 🚀 Resumo rápido
 
-O nome configurado em `ia.py`:
+Depois de clonar/baixar o projeto:
 
-```python
-openai/gemma-4-E2B-it-IQ4_XS
+### 1. Entre na pasta
+
+```powershell
+cd IA-Linguagem_Natural_para_SQL-IHC
 ```
 
-deve corresponder ao modelo disponibilizado pelo servidor local.
+### 2. Crie a virtual environment
 
-Caso o nome seja diferente, altere:
+```powershell
+python -m venv .venv
+```
 
-```python
-lm = dspy.LM(
-    "openai/NOME_DO_MODELO",
-    api_base="http://localhost:1337/v1",
-    api_key="not-needed"
-)
+### 3. Ative
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
+
+### 4. Instale as dependências
+
+```powershell
+pip install -r requirements.txt
+```
+
+### 5. Inicie o servidor do modelo local
+
+Certifique-se de que o modelo está disponível em:
+
+```text
+http://localhost:1337/v1
+```
+
+### 6. Inicie o FastAPI
+
+```powershell
+uvicorn app.main:app --reload
+```
+
+### 7. Abra a documentação
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+### 8. Faça uma pergunta
+
+```json
+{
+    "question": "qual o departamento do sabonete?"
+}
 ```
 
 ---
 
-## O SQL gerado deve ser validado
+# 👨‍💻 Projeto acadêmico
 
-Como o SQL é gerado por um modelo de linguagem, é importante validar a consulta antes de executá-la em aplicações reais.
+Projeto desenvolvido como parte das atividades acadêmicas de **Desenvolvimento de Software Multiplataforma / Interação Humano-Computador**.
 
-Atualmente, o projeto executa diretamente:
+O objetivo é estudar a integração entre:
 
-```python
-resultado = executar_sql(result.sql_query)
-```
-
-Em uma versão futura, pode ser implementada uma camada de validação para permitir apenas operações seguras, como:
-
-```sql
-SELECT
-```
-
-e bloquear comandos como:
-
-```sql
-DROP
-DELETE
-UPDATE
-INSERT
-ALTER
-```
-
----
-
-# 🚀 Possíveis melhorias futuras
-
-* Interface gráfica para o usuário.
-* Conversão de áudio para texto.
-* Suporte a múltiplas tabelas.
-* Validação automática do SQL gerado.
-* Histórico de perguntas.
-* Tratamento de erros do banco de dados.
-* Identificação automática de tabelas e colunas.
-* Sistema de confirmação antes de executar consultas.
-* Suporte a outros modelos de linguagem.
-* Integração com Telegram.
-* Retorno dos resultados em formato de tabela.
-* Sistema de autenticação.
-* Melhor tratamento de perguntas ambíguas.
-
----
-
-# 👨‍💻 Autores
-
-Projeto acadêmico desenvolvido para a disciplina de **Interação Humano-Computador (IHC)**.
-
-**Lucas da Silva Alves**
-
----
-
-# 📄 Licença
-
-Este projeto foi desenvolvido para fins acadêmicos e educacionais.
+- Linguagem natural
+- Inteligência Artificial
+- Geração automática de SQL
+- APIs REST
+- Banco de dados
+- Modelos de linguagem locais
