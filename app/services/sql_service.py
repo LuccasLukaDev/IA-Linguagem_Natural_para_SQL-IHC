@@ -1,3 +1,4 @@
+import sqlite3
 
 import dspy
 
@@ -45,6 +46,23 @@ lm = dspy.LM(
 dspy.configure(lm=lm)
 
 
+def validar_sql(sql, schema):
+
+    try:
+        conn = sqlite3.connect(":memory:")
+
+        conn.executescript(schema)
+
+        conn.execute(sql)
+
+        conn.close()
+
+        return True, None
+
+    except Exception as e:
+        return False, str(e)
+
+
 def generate(question: str):
 
     schema = """
@@ -61,20 +79,38 @@ def generate(question: str):
     );
     """
 
-    generator = ReliableSQLGenerator()
-
-    prediction = generator(
-        schema=schema,
-        question=question
-    )
-
-    sql = prediction.sql_query
-
-    conn = get_connection()
-
     try:
-        resultado = conn.execute(sql).fetchall()
-        return resultado
 
-    finally:
-        conn.close()
+        generator = ReliableSQLGenerator()
+
+        prediction = generator(
+            schema=schema,
+            question=question
+        )
+
+        sql = prediction.sql_query.strip()
+
+        # Verifica se é SELECT
+        if not sql.upper().startswith("SELECT"):
+            raise ValueError("Apenas consultas SELECT são permitidas.")
+
+        # Valida o SQL usando SQLite em memória
+        valido, erro = validar_sql(sql, schema)
+
+        if not valido:
+            raise ValueError(f"SQL inválido: {erro}")
+
+        # Se passou pelas validações, executa no banco real
+        conn = get_connection()
+
+        try:
+            resultado = conn.execute(sql).fetchall()
+            return resultado
+
+        finally:
+            conn.close()
+
+    except Exception as e:
+        return {
+            "erro": str(e)
+        }

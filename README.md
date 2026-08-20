@@ -5,20 +5,21 @@ Projeto desenvolvido para transformar perguntas feitas em **linguagem natural** 
 A aplicação recebe uma pergunta através de uma API desenvolvida com **FastAPI**, utiliza o **DSPy** para gerar a consulta SQL através de um modelo de linguagem local e executa essa consulta em um banco de dados **SQLite**.
 
 > ⚠️ O projeto atualmente trabalha apenas com perguntas em texto.
+
 > A funcionalidade de áudio utilizando Whisper ainda não está implementada nesta versão.
 
 ---
 
 # 📌 Tecnologias utilizadas
 
-- 🐍 Python 3.14
-- ⚡ FastAPI
-- 🚀 Uvicorn
-- 🧠 DSPy
-- 🤖 Gemma (modelo local)
-- 🗄️ SQLite
-- 📡 Thunder Client / Swagger
-- 🧪 Pydantic
+* 🐍 Python 3.14
+* ⚡ FastAPI
+* 🚀 Uvicorn
+* 🧠 DSPy
+* 🤖 Gemma (modelo local)
+* 🗄️ SQLite
+* 📡 Thunder Client / Swagger
+* 🧪 Pydantic
 
 ---
 
@@ -26,6 +27,7 @@ A aplicação recebe uma pergunta através de uma API desenvolvida com **FastAPI
 
 ```text
 Projeto/
+
 │
 ├── app/
 │   │
@@ -49,9 +51,8 @@ Projeto/
 ├── .venv/
 │
 ├── lojas.db
-│
+├── seed.py
 ├── requirements.txt
-│
 └── README.md
 ```
 
@@ -95,6 +96,10 @@ Arquivo principal responsável por iniciar a aplicação FastAPI e registrar os 
 
 Banco de dados SQLite utilizado pelo projeto.
 
+### `seed.py`
+
+Arquivo responsável por popular a tabela `produtos` com dados iniciais para testes.
+
 ---
 
 # 🧠 Como o projeto funciona
@@ -103,35 +108,65 @@ O funcionamento básico é:
 
 ```text
 Pergunta do usuário
+
         │
+
         ▼
+
      FastAPI
+
         │
+
         ▼
+
     Router
+
         │
+
         ▼
+
     Service
+
         │
+
         ▼
+
       DSPy
+
         │
+
         ▼
+
 Modelo Gemma local
+
         │
+
         ▼
+
     Consulta SQL
+
         │
+
         ▼
+
      SQLite
+
         │
+
         ▼
+
      Resultado
+
         │
+
         ▼
+
      FastAPI
+
         │
+
         ▼
+
       JSON
 ```
 
@@ -175,17 +210,90 @@ CREATE TABLE produtos (
 
 ## Colunas
 
-| Coluna | Tipo | Descrição |
-|---|---|---|
-| `id` | INTEGER | Identificador do produto |
-| `nome` | VARCHAR(50) | Nome do produto |
-| `departamento` | VARCHAR(50) | Departamento do produto |
-| `fabricante` | TEXT | Fabricante |
-| `data_venc` | TEXT | Data de vencimento |
-| `data_fabri` | TEXT | Data de fabricação |
-| `cod_barra` | TEXT | Código de barras |
-| `origem` | TEXT | Origem do produto |
-| `quantidade` | INTEGER | Quantidade disponível |
+| Coluna         | Tipo        | Descrição                |
+| -------------- | ----------- | ------------------------ |
+| `id`           | INTEGER     | Identificador do produto |
+| `nome`         | VARCHAR(50) | Nome do produto          |
+| `departamento` | VARCHAR(50) | Departamento do produto  |
+| `fabricante`   | TEXT        | Fabricante               |
+| `data_venc`    | TEXT        | Data de vencimento       |
+| `data_fabri`   | TEXT        | Data de fabricação       |
+| `cod_barra`    | TEXT        | Código de barras         |
+| `origem`       | TEXT        | Origem do produto        |
+| `quantidade`   | INTEGER     | Quantidade disponível    |
+
+---
+
+# 🌱 Seed do banco de dados
+
+O projeto possui um arquivo `seed.py` responsável por inserir dados iniciais na tabela `produtos`.
+
+O seed utiliza a conexão existente em:
+
+```text
+app/database/connection.py
+```
+
+e insere os seguintes produtos:
+
+| Produto  | Departamento | Fabricante | Quantidade |
+| -------- | ------------ | ---------- | ---------: |
+| sabonete | higiene      | Nivea      |         50 |
+| agua     | bebidas      | Crystal    |        100 |
+| coca     | bebidas      | Coca-Cola  |         80 |
+| arroz    | alimentos    | Tio João   |         30 |
+
+## ▶️ Executando o Seed
+
+Depois de criar o banco de dados e a tabela `produtos`, certifique-se de estar na **pasta principal do projeto** e com a virtual environment ativada.
+
+Execute:
+
+```powershell
+python seed.py
+```
+
+Se tudo estiver correto, será exibido:
+
+```text
+4 produtos inseridos com sucesso!
+```
+
+O comando irá inserir os produtos definidos no `seed.py` dentro da tabela `produtos` do banco `lojas.db`.
+
+### ⚠️ Atenção
+
+O `seed.py` utiliza `INSERT` para adicionar os produtos.
+
+Por isso, **não execute o seed várias vezes no mesmo banco**, pois os mesmos produtos serão inseridos novamente.
+
+Caso queira recriar o banco do zero, remova o arquivo:
+
+```text
+lojas.db
+```
+
+Depois inicie novamente a aplicação para criar o banco e a tabela e execute:
+
+```powershell
+python seed.py
+```
+
+A ordem recomendada é:
+
+```text
+Criar banco
+    ↓
+Criar tabela produtos
+    ↓
+Executar seed.py
+    ↓
+Popular banco
+    ↓
+Iniciar FastAPI
+    ↓
+Fazer perguntas
+```
 
 ---
 
@@ -233,7 +341,9 @@ O arquivo `requirements.txt` contém:
 
 ```text
 fastapi
+
 uvicorn
+
 dspy
 ```
 
@@ -307,6 +417,12 @@ Ative a virtual environment:
 .\.venv\Scripts\Activate.ps1
 ```
 
+Depois, caso o banco ainda não tenha sido populado, execute o seed:
+
+```powershell
+python seed.py
+```
+
 Depois inicie o FastAPI:
 
 ```powershell
@@ -317,6 +433,7 @@ Se tudo estiver correto, aparecerá:
 
 ```text
 INFO:     Uvicorn running on http://127.0.0.1:8000
+
 INFO:     Application startup complete.
 ```
 
@@ -507,6 +624,7 @@ O projeto utiliza uma assinatura semelhante a:
 
 ```python
 class TextToSQL(dspy.Signature):
+
     """
     Gera uma consulta SQL a partir de uma pergunta em linguagem natural.
     """
@@ -603,6 +721,7 @@ from pydantic import BaseModel
 
 
 class Pergunta(BaseModel):
+
     question: str
 ```
 
@@ -637,6 +756,12 @@ CREATE TABLE IF NOT EXISTS produtos
 ```
 
 Isso evita que a aplicação tente criar novamente uma tabela que já existe.
+
+Depois que a tabela for criada, o arquivo `seed.py` pode ser executado para inserir os dados iniciais:
+
+```powershell
+python seed.py
+```
 
 ---
 
@@ -774,6 +899,52 @@ TcpTestSucceeded : True
 
 ---
 
+## Seed não insere os produtos
+
+Verifique se você está executando o comando na **pasta principal do projeto**:
+
+```text
+Projeto/
+```
+
+e se a virtual environment está ativada.
+
+Execute:
+
+```powershell
+python seed.py
+```
+
+Se o banco ou a tabela ainda não existirem, primeiro execute a aplicação para realizar a inicialização do SQLite e depois execute o seed.
+
+---
+
+## Produtos duplicados no banco
+
+O `seed.py` utiliza `INSERT` e não verifica se os produtos já foram inseridos.
+
+Executar:
+
+```powershell
+python seed.py
+```
+
+mais de uma vez pode inserir os mesmos produtos novamente.
+
+Para começar novamente com os dados iniciais, remova:
+
+```text
+lojas.db
+```
+
+Depois recrie o banco e execute:
+
+```powershell
+python seed.py
+```
+
+---
+
 # 🔐 Segurança
 
 Caso o projeto utilize tokens ou chaves de API, **não coloque essas informações diretamente no código ou no GitHub**.
@@ -790,7 +961,9 @@ E adicione `.env` ao `.gitignore`:
 
 ```text
 .env
+
 .venv/
+
 __pycache__/
 ```
 
@@ -800,9 +973,9 @@ __pycache__/
 
 A versão original do projeto possuía integração com:
 
-- Telegram Bot
-- Whisper
-- FFmpeg
+* Telegram Bot
+* Whisper
+* FFmpeg
 
 Essas funcionalidades foram temporariamente deixadas de fora da versão atual.
 
@@ -810,15 +983,25 @@ O foco atual é:
 
 ```text
 Texto
+
   ↓
+
 FastAPI
+
   ↓
+
 DSPy
+
   ↓
+
 Gemma
+
   ↓
+
 SQL
+
   ↓
+
 SQLite
 ```
 
@@ -826,15 +1009,25 @@ Posteriormente, o Whisper poderá ser integrado para permitir perguntas através
 
 ```text
 Áudio
+
   ↓
+
 Whisper
+
   ↓
+
 Texto
+
   ↓
+
 DSPy
+
   ↓
+
 SQL
+
   ↓
+
 SQLite
 ```
 
@@ -943,19 +1136,37 @@ Certifique-se de que o modelo está disponível em:
 http://localhost:1337/v1
 ```
 
-### 6. Inicie o FastAPI
+### 6. Inicie o FastAPI para criar o banco e a tabela
 
 ```powershell
 uvicorn app.main:app --reload
 ```
 
-### 7. Abra a documentação
+### 7. Execute o Seed
+
+Em outro terminal, com a virtual environment ativada e na pasta principal:
+
+```powershell
+cd Projeto
+```
+
+```powershell
+python -m app.database.seed
+```
+
+O resultado esperado:
+
+```text
+4 produtos inseridos com sucesso!
+```
+
+### 8. Abra a documentação
 
 ```text
 http://127.0.0.1:8000/docs
 ```
 
-### 8. Faça uma pergunta
+### 9. Faça uma pergunta
 
 ```json
 {
@@ -971,9 +1182,9 @@ Projeto desenvolvido como parte das atividades acadêmicas de **Desenvolvimento 
 
 O objetivo é estudar a integração entre:
 
-- Linguagem natural
-- Inteligência Artificial
-- Geração automática de SQL
-- APIs REST
-- Banco de dados
-- Modelos de linguagem locais
+* Linguagem natural
+* Inteligência Artificial
+* Geração automática de SQL
+* APIs REST
+* Banco de dados
+* Modelos de linguagem locais

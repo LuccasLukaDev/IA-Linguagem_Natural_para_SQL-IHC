@@ -4,3 +4,6 @@ venv/
 env/
 ENV/
 __pycache__/
+
+# Arquivos de Teste
+*.db

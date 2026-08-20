@@ -2,6 +2,7 @@ from fastapi import APIRouter
 
 from app.schemas.pergunta import Pergunta
 from app.services.sql_service import generate
+from app.services.listar_produto_service import listar_produtos
 
 
 router = APIRouter(
@@ -17,4 +18,13 @@ def perguntar(pergunta: Pergunta):
 
     return {
         "resultado": resultado
+    }
+
+@router.get("/listar")
+def listar():
+
+    produtos = listar_produtos()
+
+    return {
+        "produtos" : produtos
     }
