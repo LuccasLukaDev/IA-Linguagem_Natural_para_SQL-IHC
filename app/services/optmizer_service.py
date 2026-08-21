@@ -1,45 +1,31 @@
 import dspy
 
+from app.config.database import DB_SCHEMA
 from app.services.sql_service import ReliableSQLGenerator
 from dspy.teleprompt import GEPA
 
 
-schema = """
-CREATE TABLE produtos (
-    id INTEGER PRIMARY KEY,
-    nome VARCHAR(50),
-    departamento VARCHAR(50),
-    fabricante TEXT,
-    data_venc TEXT,
-    data_fabri TEXT,
-    cod_barra TEXT,
-    origem TEXT,
-    quantidade INTEGER
-);
-"""
-
-
 trainset = [
     dspy.Example(
-        schema=schema,
+        schema=DB_SCHEMA,
         question="qual o departamento do sabonete?",
         sql_query="SELECT departamento FROM produtos WHERE nome = 'sabonete'"
     ).with_inputs("schema", "question"),
 
     dspy.Example(
-        schema=schema,
+        schema=DB_SCHEMA,
         question="qual o fabricante da coca?",
         sql_query="SELECT fabricante FROM produtos WHERE nome = 'coca'"
     ).with_inputs("schema", "question"),
 
     dspy.Example(
-        schema=schema,
+        schema=DB_SCHEMA,
         question="qual a quantidade de agua?",
         sql_query="SELECT quantidade FROM produtos WHERE nome = 'agua'"
     ).with_inputs("schema", "question"),
 
     dspy.Example(
-        schema=schema,
+        schema=DB_SCHEMA,
         question="liste os produtos do departamento bebidas",
         sql_query="SELECT nome FROM produtos WHERE departamento = 'bebidas'"
     ).with_inputs("schema", "question"),

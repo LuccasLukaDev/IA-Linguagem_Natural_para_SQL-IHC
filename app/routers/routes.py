@@ -20,11 +20,12 @@ def perguntar(pergunta: Pergunta):
         "resultado": resultado
     }
 
+
 @router.get("/listar")
 def listar():
 
-    produtos = listar_produtos()
+    listaProdutos = listar_produtos()
 
     return {
-        "produtos" : produtos
+        "resultado" : listaProdutos
     }

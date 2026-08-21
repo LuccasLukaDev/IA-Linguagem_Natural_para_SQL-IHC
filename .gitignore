@@ -7,3 +7,6 @@ __pycache__/
 
 # Arquivos de Teste
 *.db
+
+# .env
+env.py

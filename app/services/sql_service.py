@@ -2,26 +2,38 @@ import sqlite3
 
 import dspy
 
-from app.database.connection import get_connection
+from app.server.bd import get_connection
 
+from app.config.database import DB_SCHEMA
 
 class TextToSQL(dspy.Signature):
     """
     Gera uma consulta SQL a partir de uma pergunta em linguagem natural.
+
+    Antes de gerar o SQL, interprete a intenção do usuário.
+    Considere possíveis erros de digitação, ortografia e pequenas
+    variações nas palavras.
+
+    Exemplos:
+    - "arros" deve ser interpretado como "arroz"
+    - "sabonete" pode aparecer com pequenas variações de escrita
+    - "departameto" deve ser interpretado como "departamento"
+
+    Sempre utilize os nomes reais das colunas e dos valores existentes
+    no banco de dados quando forem conhecidos.
     """
 
     dbschema = dspy.InputField(
-        desc="Schema do banco de dados"
+        desc="Schema do banco de dados SQLite"
     )
 
     question = dspy.InputField(
-        desc="Pergunta em linguagem natural"
+        desc="Pergunta do usuário em linguagem natural, podendo conter erros de digitação"
     )
 
     sql_query = dspy.OutputField(
-        desc="Consulta SQL válida para SQLite"
+        desc="Consulta SQL válida para SQLite, corrigindo mentalmente pequenos erros de digitação"
     )
-
 
 class ReliableSQLGenerator(dspy.Module):
 
@@ -65,26 +77,12 @@ def validar_sql(sql, schema):
 
 def generate(question: str):
 
-    schema = """
-    CREATE TABLE produtos (
-        id INTEGER PRIMARY KEY,
-        nome VARCHAR(50),
-        departamento VARCHAR(50),
-        fabricante TEXT,
-        data_venc TEXT,
-        data_fabri TEXT,
-        cod_barra TEXT,
-        origem TEXT,
-        quantidade INTEGER
-    );
-    """
-
     try:
 
         generator = ReliableSQLGenerator()
 
         prediction = generator(
-            schema=schema,
+            schema=DB_SCHEMA,
             question=question
         )
 
@@ -93,7 +91,7 @@ def generate(question: str):
         if not sql.upper().startswith("SELECT"):
             raise ValueError("Apenas consultas SELECT são permitidas.")
 
-        valido, erro = validar_sql(sql, schema)
+        valido, erro = validar_sql(sql, DB_SCHEMA)
 
         if not valido:
             raise ValueError(f"SQL inválido: {erro}")

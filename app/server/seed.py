@@ -1,4 +1,4 @@
-from app.database.connection import get_connection
+from app.server.bd import get_connection
 
 
 produtos = [

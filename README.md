@@ -1,25 +1,34 @@
 # 🤖 Linguagem Natural para SQL
 
-Projeto desenvolvido para transformar perguntas feitas em **linguagem natural** em consultas **SQL**, utilizando inteligência artificial.
+Projeto desenvolvido para transformar perguntas feitas em **linguagem natural** em consultas **SQL**, utilizando Inteligência Artificial.
 
-A aplicação recebe uma pergunta através de uma API desenvolvida com **FastAPI**, utiliza o **DSPy** para gerar a consulta SQL através de um modelo de linguagem local e executa essa consulta em um banco de dados **SQLite**.
+A aplicação recebe perguntas através de uma **API REST desenvolvida com FastAPI** ou através de um **Bot do Telegram**.
 
-> ⚠️ O projeto atualmente trabalha apenas com perguntas em texto.
+Para realizar a conversão de linguagem natural para SQL, o projeto utiliza:
 
-> A funcionalidade de áudio utilizando Whisper ainda não está implementada nesta versão.
+- 🧠 **DSPy** para estruturar a geração da consulta;
+- 🤖 **Gemma** executado localmente;
+- 🗄️ **SQLite** como banco de dados;
+- 🎤 **Whisper** para transcrição de mensagens de voz no Telegram.
+
+Antes de executar uma consulta no banco real, o SQL gerado pelo modelo passa por validações para garantir que apenas consultas permitidas sejam executadas.
 
 ---
 
 # 📌 Tecnologias utilizadas
 
-* 🐍 Python 3.14
-* ⚡ FastAPI
-* 🚀 Uvicorn
-* 🧠 DSPy
-* 🤖 Gemma (modelo local)
-* 🗄️ SQLite
-* 📡 Thunder Client / Swagger
-* 🧪 Pydantic
+- 🐍 Python 3.14
+- ⚡ FastAPI
+- 🚀 Uvicorn
+- 🧠 DSPy
+- 🤖 Gemma — modelo de linguagem local
+- 🗄️ SQLite
+- 🧪 Pydantic
+- 🤖 Telegram Bot API
+- 🎤 Whisper
+- 🔐 python-dotenv
+- 📚 Swagger
+- 🧰 Thunder Client
 
 ---
 
@@ -27,177 +36,251 @@ A aplicação recebe uma pergunta através de uma API desenvolvida com **FastAPI
 
 ```text
 Projeto/
-
 │
 ├── app/
 │   │
-│   ├── database/
-│   │   └── connection.py
-│   │   └── seed.py
+│   ├── Bot/
+│   │   ├── telegram_bot.py
+│   │   └── env.py
+│   │
+│   ├── config/
+│   │   └── database.py
 │   │
 │   ├── docs/
 │   │
 │   ├── routers/
-│   │   └── produtos.py
+│   │   └── routes.py
 │   │
 │   ├── schemas/
-│   │   └── pergunta.py
+│   │   ├── pergunta.py
 │   │   └── produto.py
 │   │
+│   ├── server/
+│   │   ├── bd.py
+│   │   └── main.py
+│   │
 │   ├── services/
-│   │   └── listar_produto_service.py
+│   │   ├── listar_produto_service.py
 │   │   └── sql_service.py
 │   │
-│   ├── __init__.py
-│   └── main.py
+│   └── __init__.py
 │
 ├── .venv/
-│
 ├── .gitignore
+├── lojas.db
 ├── requirements.txt
 └── README.md
 ```
 
-## 📁 Descrição das pastas
+---
 
-### `app/`
+# 📁 Descrição das pastas
 
-Contém todo o código principal da aplicação FastAPI.
+## `app/`
 
-### `app/database/`
-
-Responsável pela conexão e inicialização do banco SQLite.
-
-### `app/routers/`
-
-Contém as rotas da API.
-
-Exemplo:
-
-```text
-POST /produtos/perguntar
-```
-
-### `app/schemas/`
-
-Contém os modelos de dados utilizados pela API através do Pydantic.
-
-### `app/services/`
-
-Contém a lógica responsável por transformar a pergunta em SQL e executar a consulta no banco.
-
-### `app/docs/`
-
-Documentação adicional do projeto.
-
-### `main.py`
-
-Arquivo principal responsável por iniciar a aplicação FastAPI e registrar os routers.
-
-### `lojas.db`
-
-Banco de dados SQLite utilizado pelo projeto.
-
-### `seed.py`
-
-Arquivo responsável por popular a tabela `produtos` com dados iniciais para testes.
+Contém todo o código principal da aplicação.
 
 ---
 
-# 🧠 Como o projeto funciona
+## `app/Bot/`
 
-O funcionamento básico é:
+Contém a integração com o Telegram.
 
-```text
-Pergunta do usuário
-
-        │
-
-        ▼
-
-     FastAPI
-
-        │
-
-        ▼
-
-    Router
-
-        │
-
-        ▼
-
-    Service
-
-        │
-
-        ▼
-
-      DSPy
-
-        │
-
-        ▼
-
-Modelo Gemma local
-
-        │
-
-        ▼
-
-    Consulta SQL
-
-        │
-
-        ▼
-
-     SQLite
-
-        │
-
-        ▼
-
-     Resultado
-
-        │
-
-        ▼
-
-     FastAPI
-
-        │
-
-        ▼
-
-      JSON
-```
-
-Por exemplo, o usuário envia:
+Principais arquivos:
 
 ```text
-Qual o departamento do sabonete?
+telegram_bot.py
+env.py
 ```
 
-O modelo pode gerar:
+### `telegram_bot.py`
 
-```sql
-SELECT departamento
-FROM produtos
-WHERE nome = 'sabonete';
+Responsável por:
+
+- Inicializar o Bot do Telegram;
+- Receber comandos;
+- Receber mensagens de texto;
+- Receber mensagens de voz;
+- Enviar perguntas para o `generate()`;
+- Retornar os resultados para o usuário.
+
+O bot possui suporte para:
+
+```text
+/start
+/listar
 ```
 
-A consulta é executada no SQLite e a API retorna o resultado.
+Além de mensagens normais de texto e mensagens de voz.
+
+### `env.py`
+
+Responsável por disponibilizar o token utilizado pelo Bot do Telegram.
+
+> ⚠️ O token real não deve ser publicado no GitHub.
+
+---
+
+## `app/config/`
+
+Contém configurações utilizadas pela aplicação.
+
+### `database.py`
+
+Centraliza o schema utilizado pela aplicação através da constante:
+
+```python
+DB_SCHEMA = """
+CREATE TABLE IF NOT EXISTS produtos (
+    id INTEGER PRIMARY KEY,
+    nome VARCHAR(50),
+    departamento VARCHAR(50),
+    fabricante TEXT,
+    data_venc TEXT,
+    data_fabri TEXT,
+    cod_barra TEXT,
+    origem TEXT,
+    quantidade INTEGER
+);
+"""
+```
+
+O `DB_SCHEMA` é utilizado tanto para a criação da tabela quanto para fornecer ao modelo de IA a estrutura do banco.
+
+Isso evita duplicar a definição da tabela em diferentes arquivos.
+
+---
+
+## `app/docs/`
+
+Contém documentação adicional relacionada ao projeto.
+
+---
+
+## `app/routers/`
+
+Contém as rotas da API FastAPI.
+
+Atualmente o projeto possui:
+
+```text
+POST /produtos/perguntar
+GET  /produtos/listar
+```
+
+O arquivo principal das rotas é:
+
+```text
+app/routers/routes.py
+```
+
+---
+
+## `app/schemas/`
+
+Contém os modelos Pydantic utilizados para validação dos dados da API.
+
+### `pergunta.py`
+
+Define o formato das perguntas recebidas pela API.
+
+Exemplo:
+
+```python
+from pydantic import BaseModel
+
+
+class Pergunta(BaseModel):
+    question: str
+```
+
+### `produto.py`
+
+Define o modelo utilizado para representar um produto.
+
+---
+
+## `app/server/`
+
+Contém a configuração do servidor e a conexão com o banco.
+
+### `main.py`
+
+É o ponto de entrada principal da aplicação FastAPI.
+
+Responsável por:
+
+- Criar a aplicação FastAPI;
+- Inicializar o banco;
+- Registrar os routers;
+- Inicializar o Bot do Telegram.
+
+A aplicação é executada através de:
+
+```powershell
+uvicorn app.server.main:app --reload
+```
+
+### `bd.py`
+
+Responsável pela conexão e criação do banco SQLite.
+
+Utiliza o `DB_SCHEMA` localizado em:
+
+```text
+app/config/database.py
+```
+
+---
+
+## `app/services/`
+
+Contém a lógica principal da aplicação.
+
+### `sql_service.py`
+
+Responsável pelo processo de transformação de linguagem natural para SQL.
+
+O fluxo é:
+
+```text
+Pergunta
+   ↓
+DB_SCHEMA
+   ↓
+DSPy
+   ↓
+Gemma
+   ↓
+SQL
+   ↓
+Validação
+   ↓
+SQLite
+   ↓
+Resultado
+```
+
+### `listar_produto_service.py`
+
+Responsável por consultar e listar os produtos cadastrados no banco.
 
 ---
 
 # 🗄️ Banco de dados
 
-O projeto utiliza SQLite.
+O projeto utiliza **SQLite**.
+
+O arquivo utilizado é:
+
+```text
+lojas.db
+```
 
 A tabela principal é:
 
 ```sql
-CREATE TABLE produtos (
+CREATE TABLE IF NOT EXISTS produtos (
     id INTEGER PRIMARY KEY,
     nome VARCHAR(50),
     departamento VARCHAR(50),
@@ -210,154 +293,104 @@ CREATE TABLE produtos (
 );
 ```
 
-## Colunas
+## 📋 Colunas
 
-| Coluna         | Tipo        | Descrição                |
-| -------------- | ----------- | ------------------------ |
-| `id`           | INTEGER     | Identificador do produto |
-| `nome`         | VARCHAR(50) | Nome do produto          |
-| `departamento` | VARCHAR(50) | Departamento do produto  |
-| `fabricante`   | TEXT        | Fabricante               |
-| `data_venc`    | TEXT        | Data de vencimento       |
-| `data_fabri`   | TEXT        | Data de fabricação       |
-| `cod_barra`    | TEXT        | Código de barras         |
-| `origem`       | TEXT        | Origem do produto        |
-| `quantidade`   | INTEGER     | Quantidade disponível    |
+| Coluna | Tipo | Descrição |
+|---|---|---|
+| `id` | INTEGER | Identificador do produto |
+| `nome` | VARCHAR(50) | Nome do produto |
+| `departamento` | VARCHAR(50) | Departamento do produto |
+| `fabricante` | TEXT | Fabricante |
+| `data_venc` | TEXT | Data de vencimento |
+| `data_fabri` | TEXT | Data de fabricação |
+| `cod_barra` | TEXT | Código de barras |
+| `origem` | TEXT | Origem do produto |
+| `quantidade` | INTEGER | Quantidade disponível |
+
+---
+
+# 🧩 Schema centralizado
+
+O schema da tabela está centralizado em:
+
+```text
+app/config/database.py
+```
+
+através da constante:
+
+```python
+DB_SCHEMA
+```
+
+Esse schema possui duas funções principais:
+
+1. Criar a tabela no SQLite;
+2. Informar ao modelo de IA quais tabelas e colunas estão disponíveis.
+
+O fluxo é:
+
+```text
+                 DB_SCHEMA
+                /         \
+               ↓           ↓
+        Criação SQLite    DSPy
+                           ↓
+                       Gemma local
+```
+
+Dessa forma, não é necessário manter a mesma definição da tabela em vários arquivos.
 
 ---
 
 # 🌱 Seed do banco de dados
 
-O projeto possui um arquivo `seed.py` responsável por inserir dados iniciais na tabela `produtos`.
-
-O seed utiliza a conexão existente em:
+O projeto possui um arquivo:
 
 ```text
-app/database/connection.py
+app/database/seed.py
 ```
 
-e insere os seguintes produtos:
+responsável por inserir dados iniciais na tabela `produtos`.
 
-| Produto  | Departamento | Fabricante | Quantidade |
-| -------- | ------------ | ---------- | ---------: |
-| sabonete | higiene      | Nivea      |         50 |
-| agua     | bebidas      | Crystal    |        100 |
-| coca     | bebidas      | Coca-Cola  |         80 |
-| arroz    | alimentos    | Tio João   |         30 |
+Exemplo de dados:
+
+| Produto | Departamento | Fabricante | Quantidade |
+|---|---|---|---:|
+| sabonete | higiene | Nivea | 50 |
+| agua | bebidas | Crystal | 100 |
+| coca | bebidas | Coca-Cola | 80 |
+| arroz | alimentos | Tio João | 30 |
 
 ## ▶️ Executando o Seed
 
-Depois de criar o banco de dados e a tabela `produtos`, certifique-se de estar na **pasta principal do projeto** e com a virtual environment ativada.
-
-Execute:
+Com a virtual environment ativada e na pasta principal do projeto:
 
 ```powershell
-python seed.py
+python -m app.database.seed
 ```
-
-Se tudo estiver correto, será exibido:
-
-```text
-4 produtos inseridos com sucesso!
-```
-
-O comando irá inserir os produtos definidos no `seed.py` dentro da tabela `produtos` do banco `lojas.db`.
 
 ### ⚠️ Atenção
 
-O `seed.py` utiliza `INSERT` para adicionar os produtos.
+O `seed.py` utiliza `INSERT`.
 
-Por isso, **não execute o seed várias vezes no mesmo banco**, pois os mesmos produtos serão inseridos novamente.
+Portanto, executar o seed várias vezes pode inserir os mesmos produtos novamente.
 
-Caso queira recriar o banco do zero, remova o arquivo:
-
-```text
-lojas.db
-```
-
-Depois inicie novamente a aplicação para criar o banco e a tabela e execute:
-
-```powershell
-python seed.py
-```
-
-A ordem recomendada é:
+Caso queira começar novamente:
 
 ```text
-Criar banco
-    ↓
-Criar tabela produtos
-    ↓
-Executar seed.py
-    ↓
-Popular banco
-    ↓
-Iniciar FastAPI
-    ↓
-Fazer perguntas
+1. Remova lojas.db
+2. Inicie a aplicação
+3. Execute o seed novamente
 ```
-
----
-
-# 🐍 Configuração do Python
-
-Recomenda-se utilizar um ambiente virtual para instalar as dependências do projeto.
-
-## Criando o ambiente virtual
-
-Na pasta principal do projeto:
-
-```powershell
-python -m venv .venv
-```
-
----
-
-# ▶️ Ativando a virtual environment
-
-No Windows PowerShell:
-
-```powershell
-.\.venv\Scripts\Activate.ps1
-```
-
-Depois da ativação, o terminal deverá mostrar:
-
-```text
-(.venv) PS C:\...\Projeto>
-```
-
-Isso significa que o ambiente virtual está ativo.
-
----
-
-# 📦 Instalando as dependências
-
-Com a `.venv` ativada:
-
-```powershell
-pip install -r requirements.txt
-```
-
-O arquivo `requirements.txt` contém:
-
-```text
-fastapi
-
-uvicorn
-
-dspy
-```
-
-O SQLite não precisa ser instalado através do `pip`, pois o módulo `sqlite3` já faz parte da instalação padrão do Python.
 
 ---
 
 # 🤖 Configuração do modelo local
 
-O projeto utiliza um modelo Gemma executado localmente.
+O projeto utiliza um modelo **Gemma executado localmente**.
 
-O DSPy está configurado para acessar o modelo através de uma API compatível com OpenAI.
+O DSPy acessa o modelo através de uma API compatível com OpenAI.
 
 Configuração utilizada:
 
@@ -369,19 +402,19 @@ lm = dspy.LM(
 )
 ```
 
-Isso significa que o servidor do modelo precisa estar rodando na porta:
+O servidor local do modelo deve estar disponível na porta:
 
 ```text
 1337
 ```
 
-O endereço utilizado pela aplicação é:
+Endpoint:
 
 ```text
 http://localhost:1337/v1
 ```
 
-## Testando o servidor do modelo
+## Testando o servidor
 
 No PowerShell:
 
@@ -389,7 +422,7 @@ No PowerShell:
 Test-NetConnection localhost -Port 1337
 ```
 
-O resultado esperado é:
+Resultado esperado:
 
 ```text
 TcpTestSucceeded : True
@@ -401,73 +434,622 @@ Caso apareça:
 TcpTestSucceeded : False
 ```
 
-o servidor do modelo local não está funcionando ou não está utilizando a porta `1337`.
+o servidor do modelo local não está disponível na porta `1337`.
+
+---
+
+# 🧠 DSPy e geração de SQL
+
+O DSPy é utilizado para estruturar a interação entre a pergunta do usuário, o schema do banco e o modelo de linguagem.
+
+A assinatura utilizada é semelhante a:
+
+```python
+class TextToSQL(dspy.Signature):
+    """
+    Gera uma consulta SQL a partir de uma pergunta em linguagem natural.
+    """
+
+    dbschema = dspy.InputField(
+        desc="Schema do banco de dados"
+    )
+
+    question = dspy.InputField(
+        desc="Pergunta em linguagem natural"
+    )
+
+    sql_query = dspy.OutputField(
+        desc="Consulta SQL válida para SQLite"
+    )
+```
+
+O gerador utiliza `ChainOfThought`:
+
+```python
+class ReliableSQLGenerator(dspy.Module):
+
+    def __init__(self):
+        super().__init__()
+
+        self.generate_sql = dspy.ChainOfThought(TextToSQL)
+
+    def forward(self, schema, question):
+        return self.generate_sql(
+            dbschema=schema,
+            question=question
+        )
+```
+
+O modelo recebe:
+
+```text
+Schema do banco
+       +
+Pergunta do usuário
+       ↓
+     DSPy
+       ↓
+  Gemma local
+       ↓
+   SQL gerado
+```
+
+---
+
+# 🔐 Validação e segurança do SQL
+
+O SQL gerado pelo modelo não é executado diretamente no banco real.
+
+Primeiro é realizada uma validação.
+
+A aplicação verifica se a consulta começa com:
+
+```python
+if not sql.upper().startswith("SELECT"):
+    raise ValueError("Apenas consultas SELECT são permitidas.")
+```
+
+Dessa forma, comandos como:
+
+```text
+INSERT
+UPDATE
+DELETE
+DROP
+ALTER
+```
+
+não são permitidos pelo fluxo atual.
+
+Depois, o SQL é testado em um banco SQLite em memória utilizando o `DB_SCHEMA`.
+
+```text
+SQL gerado
+    ↓
+É SELECT?
+    │
+    ├── NÃO → Erro
+    │
+    ▼
+Validação SQLite
+    │
+    ├── Inválido → Erro
+    │
+    ▼
+SQLite real
+    │
+    ▼
+Resultado
+```
+
+> A validação atual é uma camada de proteção do projeto, mas não deve ser considerada uma solução completa de segurança para ambientes de produção.
+
+---
+
+# 🏗️ Service de geração SQL
+
+O principal service está localizado em:
+
+```text
+app/services/sql_service.py
+```
+
+A função principal é:
+
+```python
+generate(question)
+```
+
+Exemplo:
+
+```python
+generate("Qual o departamento do sabonete?")
+```
+
+O service:
+
+1. Recebe a pergunta;
+2. Utiliza `DB_SCHEMA`;
+3. Envia schema e pergunta ao DSPy;
+4. Recebe o `Prediction`;
+5. Obtém `prediction.sql_query`;
+6. Verifica se o SQL é permitido;
+7. Valida a consulta;
+8. Executa a consulta no SQLite;
+9. Retorna os dados encontrados.
+
+## Retorno
+
+Quando a consulta é executada com sucesso:
+
+```python
+[
+    ("higiene",)
+]
+```
+
+O retorno é normalmente uma:
+
+```text
+list[tuple]
+```
+
+Quando ocorre um erro:
+
+```python
+{
+    "erro": "Mensagem do erro"
+}
+```
+
+Nesse caso, o retorno é um:
+
+```text
+dict[str, str]
+```
+
+---
+
+# 🌐 API FastAPI
+
+A aplicação utiliza FastAPI para disponibilizar uma API REST.
+
+## Perguntar
+
+```text
+POST /produtos/perguntar
+```
+
+Body:
+
+```json
+{
+    "question": "qual o departamento do sabonete?"
+}
+```
+
+Fluxo:
+
+```text
+Pergunta
+   ↓
+Router
+   ↓
+generate()
+   ↓
+DSPy
+   ↓
+Gemma
+   ↓
+SQL
+   ↓
+Validação
+   ↓
+SQLite
+   ↓
+Resultado
+```
+
+---
+
+# 📋 Listar produtos
+
+A API também possui:
+
+```text
+GET /produtos/listar
+```
+
+Essa rota utiliza:
+
+```text
+app/services/listar_produto_service.py
+```
+
+para consultar os produtos cadastrados.
+
+---
+
+# 🤖 Bot do Telegram
+
+O projeto possui integração com o **Telegram Bot API**.
+
+O Bot utiliza os mesmos services da API.
+
+Isso significa que a lógica de geração SQL não fica dentro do Telegram.
+
+O Telegram apenas recebe a mensagem e encaminha para:
+
+```python
+generate()
+```
+
+O fluxo é:
+
+```text
+Usuário
+   ↓
+Telegram
+   ↓
+Bot
+   ↓
+generate()
+   ↓
+DSPy
+   ↓
+Gemma
+   ↓
+SQL
+   ↓
+SQLite
+   ↓
+Resultado
+   ↓
+Telegram
+```
+
+---
+
+# `/start`
+
+O comando:
+
+```text
+/start
+```
+
+inicia a interação com o bot.
+
+Resposta:
+
+```text
+Olá! 🤖
+Você pode me perguntar algo sobre os produtos.
+```
+
+---
+
+# `/listar`
+
+O comando:
+
+```text
+/listar
+```
+
+consulta os produtos cadastrados utilizando:
+
+```python
+listar_produtos()
+```
+
+e retorna os dados para o usuário.
+
+---
+
+# 💬 Perguntas por texto
+
+O usuário pode enviar diretamente uma pergunta:
+
+```text
+Qual o departamento do sabonete?
+```
+
+O Telegram disponibiliza o conteúdo da mensagem através de:
+
+```python
+message.text
+```
+
+Esse conteúdo é enviado para:
+
+```python
+generate(message.text)
+```
+
+O resultado é convertido para uma resposta adequada antes de ser enviado novamente ao Telegram.
+
+Por exemplo:
+
+```text
+Qual o departamento do sabonete?
+```
+
+pode resultar em:
+
+```text
+higiene
+```
+
+---
+
+# 🎤 Perguntas por voz
+
+O bot também possui suporte para mensagens de voz.
+
+O fluxo é:
+
+```text
+🎤 Áudio
+   ↓
+Telegram
+   ↓
+Bot
+   ↓
+Whisper
+   ↓
+Texto transcrito
+   ↓
+generate()
+   ↓
+DSPy
+   ↓
+Gemma
+   ↓
+SQL
+   ↓
+SQLite
+   ↓
+Resultado
+   ↓
+Telegram
+```
+
+A transcrição utiliza Whisper:
+
+```python
+def transcricao_whisper(filepath: str, model="tiny") -> str:
+
+    whisper_model = whisper.load_model(model)
+
+    result = whisper_model.transcribe(filepath)
+
+    return result["text"]
+```
+
+O modelo utilizado atualmente é:
+
+```text
+tiny
+```
+
+Modelos maiores podem apresentar maior qualidade de transcrição, porém exigem mais memória e processamento.
+
+---
+
+# 🔐 Token do Telegram
+
+O token do Telegram é utilizado pelo Bot através do arquivo:
+
+```text
+app/Bot/env.py
+```
+
+O token **não deve ser colocado diretamente no código do bot**.
+
+O ideal é utilizar uma variável de ambiente.
+
+Exemplo:
+
+```env
+API_TOKEN=SEU_TOKEN_DO_TELEGRAM
+```
+
+E no código:
+
+```python
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+API_TOKEN = os.getenv("API_TOKEN")
+```
+
+O arquivo `.env` deve estar no `.gitignore`.
+
+Exemplo:
+
+```gitignore
+.env
+.venv/
+__pycache__/
+*.db
+```
+
+> ⚠️ Nunca publique o token real do Telegram no GitHub.
+
+---
+
+# 🧵 Inicialização do Bot junto com o FastAPI
+
+O Bot é inicializado junto com a aplicação FastAPI.
+
+Para evitar que o `polling()` bloqueie o servidor principal, o bot é executado em uma `Thread`.
+
+Conceitualmente:
+
+```text
+                 FastAPI
+                    │
+              ┌─────┴─────┐
+              │           │
+           API REST    Thread
+                          │
+                     Telegram Bot
+```
+
+Assim, a aplicação consegue manter simultaneamente:
+
+- o servidor FastAPI;
+- o Bot do Telegram.
+
+A aplicação é iniciada apenas através do servidor FastAPI.
 
 ---
 
 # 🚀 Executando o projeto
 
-Primeiro, abra o PowerShell na pasta principal do projeto:
+## 1. Criar a virtual environment
 
-```text
-Projeto/
+Na pasta principal:
+
+```powershell
+python -m venv .venv
 ```
 
-Ative a virtual environment:
+---
+
+## 2. Ativar a virtual environment
+
+No Windows PowerShell:
 
 ```powershell
 .\.venv\Scripts\Activate.ps1
 ```
 
-Depois, caso o banco ainda não tenha sido populado, execute o seed:
-
-```powershell
-python seed.py
-```
-
-Depois inicie o FastAPI:
-
-```powershell
-uvicorn app.main:app --reload
-```
-
-Se tudo estiver correto, aparecerá:
+O terminal deverá apresentar algo semelhante a:
 
 ```text
-INFO:     Uvicorn running on http://127.0.0.1:8000
-
-INFO:     Application startup complete.
+(.venv) PS C:\...\Projeto>
 ```
 
-A API estará disponível em:
+---
+
+## 3. Instalar dependências
+
+```powershell
+pip install -r requirements.txt
+```
+
+---
+
+## 4. Configurar o token do Telegram
+
+Configure o token utilizado pelo Bot de acordo com a configuração do projeto.
+
+O token não deve ser versionado no Git.
+
+---
+
+## 5. Iniciar o servidor do modelo local
+
+Certifique-se de que o Gemma esteja disponível em:
+
+```text
+http://localhost:1337/v1
+```
+
+Teste:
+
+```powershell
+Test-NetConnection localhost -Port 1337
+```
+
+O resultado esperado é:
+
+```text
+TcpTestSucceeded : True
+```
+
+---
+
+## 6. Iniciar a aplicação
+
+Na pasta principal do projeto:
+
+```powershell
+uvicorn app.server.main:app --reload
+```
+
+A aplicação estará disponível em:
 
 ```text
 http://127.0.0.1:8000
+```
+
+O banco também será inicializado durante a inicialização da aplicação.
+
+---
+
+## 7. Executar o Seed
+
+Em outro terminal, com a virtual environment ativada:
+
+```powershell
+python -m app.database.seed
+```
+
+---
+
+## 8. Utilizar o Telegram
+
+Não é necessário executar o arquivo `telegram_bot.py` separadamente.
+
+O Bot é iniciado pela aplicação principal junto com o FastAPI.
+
+Portanto, basta executar:
+
+```powershell
+uvicorn app.server.main:app --reload
+```
+
+Depois abra o Telegram e envie uma mensagem para o Bot.
+
+Exemplo:
+
+```text
+/start
+```
+
+Depois:
+
+```text
+Qual o departamento do sabonete?
 ```
 
 ---
 
 # 📚 Documentação Swagger
 
-O FastAPI disponibiliza automaticamente uma interface para testar as rotas.
+O FastAPI disponibiliza automaticamente uma documentação interativa.
 
-Abra no navegador:
+Acesse:
 
 ```text
 http://127.0.0.1:8000/docs
 ```
 
-A documentação deverá mostrar a rota:
+As principais rotas são:
 
 ```text
 POST /produtos/perguntar
+GET  /produtos/listar
 ```
 
 ---
 
 # 🧪 Testando com Swagger
-
-No Swagger:
 
 1. Acesse:
 
@@ -475,7 +1057,7 @@ No Swagger:
 http://127.0.0.1:8000/docs
 ```
 
-2. Encontre:
+2. Localize:
 
 ```text
 POST /produtos/perguntar
@@ -487,7 +1069,7 @@ POST /produtos/perguntar
 Try it out
 ```
 
-4. Envie um JSON como:
+4. Envie:
 
 ```json
 {
@@ -501,13 +1083,13 @@ Try it out
 Execute
 ```
 
-A API irá enviar a pergunta para o DSPy, que utilizará o modelo local para gerar a consulta SQL.
+A pergunta será enviada para o service, que utilizará DSPy e o modelo Gemma para gerar a consulta SQL.
 
 ---
 
 # 🧪 Testando com Thunder Client
 
-Também é possível utilizar o Thunder Client no VS Code.
+Também é possível testar a API através do Thunder Client no VS Code.
 
 ## Método
 
@@ -529,14 +1111,6 @@ Content-Type: application/json
 
 ## Body
 
-Selecione:
-
-```text
-JSON
-```
-
-e envie:
-
 ```json
 {
     "question": "qual o departamento do sabonete?"
@@ -545,9 +1119,15 @@ e envie:
 
 ---
 
-# 📤 Exemplo de resposta
+# 📤 Exemplo de resposta da API
 
-Dependendo dos dados existentes no banco, a API pode retornar:
+Para uma pergunta como:
+
+```text
+Qual o departamento do sabonete?
+```
+
+A API pode retornar:
 
 ```json
 {
@@ -559,32 +1139,29 @@ Dependendo dos dados existentes no banco, a API pode retornar:
 }
 ```
 
-Caso existam dois registros que atendam à consulta:
-
-```json
-{
-    "resultado": [
-        [
-            "higiene"
-        ],
-        [
-            "higiene"
-        ]
-    ]
-}
-```
-
-Isso acontece porque o SQLite retorna todas as linhas encontradas através do:
+Isso acontece porque o SQLite retorna as linhas através de:
 
 ```python
 fetchall()
+```
+
+No Telegram, o resultado pode ser formatado para uma resposta mais amigável:
+
+```text
+higiene
+```
+
+em vez de:
+
+```text
+[["higiene"]]
 ```
 
 ---
 
 # 🔎 Exemplos de perguntas
 
-Como o sistema utiliza linguagem natural, algumas perguntas possíveis são:
+Algumas perguntas possíveis:
 
 ```text
 Qual o departamento do sabonete?
@@ -614,156 +1191,29 @@ Qual a data de vencimento do sabonete?
 Quais produtos pertencem ao departamento de bebidas?
 ```
 
-O modelo irá interpretar a pergunta e tentar gerar uma consulta SQL correspondente.
+O modelo interpreta a pergunta e tenta gerar uma consulta SQL correspondente ao schema disponível.
 
 ---
 
-# 🧠 DSPy
+# ⚠️ Limitações atuais
 
-O DSPy é responsável por estruturar a interação com o modelo de linguagem.
+Como a geração de SQL é realizada por um modelo de linguagem local, algumas perguntas podem não ser interpretadas corretamente.
 
-O projeto utiliza uma assinatura semelhante a:
-
-```python
-class TextToSQL(dspy.Signature):
-
-    """
-    Gera uma consulta SQL a partir de uma pergunta em linguagem natural.
-    """
-
-    dbschema = dspy.InputField(
-        desc="Schema do banco de dados"
-    )
-
-    question = dspy.InputField(
-        desc="Pergunta em linguagem natural"
-    )
-
-    sql_query = dspy.OutputField(
-        desc="Consulta SQL válida para SQLite"
-    )
-```
-
-O schema enviado ao modelo é:
-
-```sql
-CREATE TABLE produtos (
-    id INTEGER PRIMARY KEY,
-    nome VARCHAR(50),
-    departamento VARCHAR(50),
-    fabricante TEXT,
-    data_venc TEXT,
-    data_fabri TEXT,
-    cod_barra TEXT,
-    origem TEXT,
-    quantidade INTEGER
-);
-```
-
-Dessa forma, o modelo conhece as tabelas e colunas disponíveis para construir a consulta SQL.
-
----
-
-# 🏗️ Service
-
-A geração da consulta SQL é realizada no service:
+Por exemplo, erros de digitação podem resultar em uma consulta que não encontre resultados:
 
 ```text
-app/services/sql_service.py
+Qual o departamento do arros?
 ```
 
-O service possui a responsabilidade de:
-
-1. Receber a pergunta;
-2. Enviar a pergunta e o schema para o DSPy;
-3. Receber a consulta SQL gerada;
-4. Executar a consulta no SQLite;
-5. Retornar os resultados.
-
----
-
-# 🌐 Router
-
-A rota responsável por receber as perguntas está em:
+quando o produto cadastrado é:
 
 ```text
-app/routers/produtos.py
+arroz
 ```
 
-A rota é:
+Da mesma forma, mensagens sem relação com os produtos podem ser interpretadas incorretamente pelo modelo.
 
-```text
-POST /produtos/perguntar
-```
-
-Ela recebe um objeto JSON:
-
-```json
-{
-    "question": "qual o departamento do sabonete?"
-}
-```
-
-e encaminha a pergunta para o service.
-
----
-
-# 📋 Schema
-
-O schema utilizado para validar a pergunta está em:
-
-```text
-app/schemas/pergunta.py
-```
-
-Exemplo:
-
-```python
-from pydantic import BaseModel
-
-
-class Pergunta(BaseModel):
-
-    question: str
-```
-
-Isso faz com que a API espere um JSON com a propriedade:
-
-```text
-question
-```
-
----
-
-# 🗃️ Conexão com o SQLite
-
-A conexão com o banco está localizada em:
-
-```text
-app/database/connection.py
-```
-
-A aplicação utiliza o arquivo:
-
-```text
-lojas.db
-```
-
-O banco é criado caso ainda não exista.
-
-A tabela também é criada utilizando:
-
-```sql
-CREATE TABLE IF NOT EXISTS produtos
-```
-
-Isso evita que a aplicação tente criar novamente uma tabela que já existe.
-
-Depois que a tabela for criada, o arquivo `seed.py` pode ser executado para inserir os dados iniciais:
-
-```powershell
-python seed.py
-```
+Uma possível evolução do projeto é implementar uma etapa de **validação/classificação da intenção da pergunta** antes da geração do SQL, além de mecanismos para lidar com erros de digitação e aproximação dos nomes dos produtos.
 
 ---
 
@@ -771,81 +1221,57 @@ python seed.py
 
 ## `ModuleNotFoundError: No module named 'app'`
 
-Verifique se você está executando o comando na pasta principal:
+Certifique-se de executar os comandos na pasta principal:
 
 ```text
 Projeto/
 ```
 
-e não dentro da pasta `app`.
-
-O comando correto é:
+e utilize:
 
 ```powershell
-uvicorn app.main:app --reload
+uvicorn app.server.main:app --reload
 ```
 
 ---
 
 ## `uvicorn não é reconhecido`
 
-Verifique se a virtual environment está ativada:
+Ative a virtual environment:
 
 ```powershell
 .\.venv\Scripts\Activate.ps1
 ```
 
-O terminal deve mostrar:
-
-```text
-(.venv)
-```
-
-Depois tente:
+Depois:
 
 ```powershell
-uvicorn app.main:app --reload
+uvicorn app.server.main:app --reload
 ```
 
 ---
 
 ## `table produtos already exists`
 
-Não utilize:
-
-```sql
-CREATE TABLE produtos
-```
-
-Use:
+O schema deve utilizar:
 
 ```sql
 CREATE TABLE IF NOT EXISTS produtos
 ```
 
-Assim a tabela não será recriada quando o FastAPI for iniciado.
+O projeto já centraliza essa definição através de:
+
+```python
+DB_SCHEMA
+```
 
 ---
 
 ## API retorna `404 Not Found`
 
-Se acessar:
+A aplicação pode não possuir uma rota `/`.
 
-```text
-http://127.0.0.1:8000/
-```
-
-e receber:
-
-```text
-404 Not Found
-```
-
-isso não significa necessariamente que o FastAPI está com problema.
-
-A aplicação pode simplesmente não possuir uma rota `/`.
-
-Para testar a API, utilize:
+Utilize:
 
 ```text
 http://127.0.0.1:8000/docs
@@ -861,18 +1287,12 @@ http://127.0.0.1:8000/produtos/perguntar
 
 ## Erro `422 Unprocessable Entity`
 
-Verifique se o JSON está correto:
+Verifique se o JSON possui o campo:
 
 ```json
 {
     "question": "qual o departamento do sabonete?"
 }
-```
-
-Não envie somente:
-
-```text
-qual o departamento do sabonete?
 ```
 
 O campo `question` é obrigatório.
@@ -881,19 +1301,19 @@ O campo `question` é obrigatório.
 
 ## Erro ao conectar com o modelo
 
-Verifique se o servidor local do modelo está funcionando na porta:
+Verifique se o servidor local está funcionando na porta:
 
 ```text
 1337
 ```
 
-Teste:
+Execute:
 
 ```powershell
 Test-NetConnection localhost -Port 1337
 ```
 
-O resultado esperado:
+Resultado esperado:
 
 ```text
 TcpTestSucceeded : True
@@ -901,210 +1321,217 @@ TcpTestSucceeded : True
 
 ---
 
-## Seed não insere os produtos
+## Erro relacionado ao Whisper ou FFmpeg
 
-Verifique se você está executando o comando na **pasta principal do projeto**:
+A funcionalidade de voz depende do Whisper e do FFmpeg.
 
-```text
-Projeto/
-```
-
-e se a virtual environment está ativada.
-
-Execute:
+Teste o FFmpeg:
 
 ```powershell
-python seed.py
+ffmpeg -version
 ```
 
-Se o banco ou a tabela ainda não existirem, primeiro execute a aplicação para realizar a inicialização do SQLite e depois execute o seed.
+Caso o comando não seja reconhecido, o FFmpeg não está disponível no `PATH` do sistema.
 
 ---
 
-## Produtos duplicados no banco
+## Bot do Telegram não responde
 
-O `seed.py` utiliza `INSERT` e não verifica se os produtos já foram inseridos.
+Verifique:
 
-Executar:
+1. Se o token do Telegram está configurado corretamente;
+2. Se a aplicação FastAPI está em execução;
+3. Se o Bot foi iniciado pela `main.py`;
+4. Se o servidor local do modelo está funcionando;
+5. Se o terminal apresenta erros relacionados ao `polling`.
 
-```powershell
-python seed.py
-```
-
-mais de uma vez pode inserir os mesmos produtos novamente.
-
-Para começar novamente com os dados iniciais, remova:
-
-```text
-lojas.db
-```
-
-Depois recrie o banco e execute:
+A aplicação deve ser iniciada com:
 
 ```powershell
-python seed.py
+uvicorn app.server.main:app --reload
 ```
+
+Não é necessário executar o `telegram_bot.py` separadamente.
 
 ---
 
-# 🔐 Segurança
+## Produtos duplicados
 
-Caso o projeto utilize tokens ou chaves de API, **não coloque essas informações diretamente no código ou no GitHub**.
+O `seed.py` utiliza `INSERT`.
 
-Utilize variáveis de ambiente e um arquivo `.env`.
+Executar o seed várias vezes pode inserir os mesmos produtos novamente.
 
-Por exemplo:
-
-```text
-MODEL_API_URL=http://localhost:1337/v1
-```
-
-E adicione `.env` ao `.gitignore`:
+Para começar novamente:
 
 ```text
-.env
-
-.venv/
-
-__pycache__/
-```
-
----
-
-# 🎤 Funcionalidade de voz
-
-A versão original do projeto possuía integração com:
-
-* Telegram Bot
-* Whisper
-* FFmpeg
-
-Essas funcionalidades foram temporariamente deixadas de fora da versão atual.
-
-O foco atual é:
-
-```text
-Texto
-
-  ↓
-
-FastAPI
-
-  ↓
-
-DSPy
-
-  ↓
-
-Gemma
-
-  ↓
-
-SQL
-
-  ↓
-
-SQLite
-```
-
-Posteriormente, o Whisper poderá ser integrado para permitir perguntas através de áudio:
-
-```text
-Áudio
-
-  ↓
-
-Whisper
-
-  ↓
-
-Texto
-
-  ↓
-
-DSPy
-
-  ↓
-
-SQL
-
-  ↓
-
-SQLite
+1. Remova lojas.db
+2. Inicie a aplicação
+3. Execute o seed
 ```
 
 ---
 
 # 🔄 Fluxo completo da aplicação
 
+## API
+
 ```text
-┌───────────────────────┐
-│       Usuário         │
-│                       │
-│ "Qual o departamento  │
-│      do sabonete?"    │
-└───────────┬───────────┘
-            │
-            ▼
-┌───────────────────────┐
-│       FastAPI         │
-│                       │
-│ POST /produtos/       │
-│ perguntar             │
-└───────────┬───────────┘
-            │
-            ▼
-┌───────────────────────┐
-│        Router         │
-└───────────┬───────────┘
-            │
-            ▼
-┌───────────────────────┐
-│        Service        │
-│                       │
-│ Recebe pergunta +     │
-│ schema do banco       │
-└───────────┬───────────┘
-            │
-            ▼
-┌───────────────────────┐
-│         DSPy          │
-└───────────┬───────────┘
-            │
-            ▼
-┌───────────────────────┐
-│     Gemma local       │
-│                       │
-│ Gera SQL              │
-└───────────┬───────────┘
-            │
-            ▼
-┌───────────────────────┐
-│        SQLite         │
-│                       │
-│ Executa SQL           │
-└───────────┬───────────┘
-            │
-            ▼
-┌───────────────────────┐
-│       Resultado       │
-│                       │
-│ ["higiene"]           │
-└───────────┬───────────┘
-            │
-            ▼
-┌───────────────────────┐
-│       FastAPI         │
-│                       │
-│ Retorna JSON          │
-└───────────────────────┘
+┌─────────────────────────┐
+│        Usuário          │
+│                         │
+│ "Qual o departamento    │
+│      do sabonete?"      │
+└────────────┬────────────┘
+             │
+             ▼
+┌─────────────────────────┐
+│        FastAPI          │
+│                         │
+│ POST /produtos/         │
+│ perguntar               │
+└────────────┬────────────┘
+             │
+             ▼
+┌─────────────────────────┐
+│         Router          │
+└────────────┬────────────┘
+             │
+             ▼
+┌─────────────────────────┐
+│         Service         │
+│                         │
+│ Pergunta + DB_SCHEMA    │
+└────────────┬────────────┘
+             │
+             ▼
+┌─────────────────────────┐
+│          DSPy           │
+└────────────┬────────────┘
+             │
+             ▼
+┌─────────────────────────┐
+│      Gemma local        │
+│                         │
+│       Gera SQL          │
+└────────────┬────────────┘
+             │
+             ▼
+┌─────────────────────────┐
+│       Validação         │
+│                         │
+│    Apenas SELECT        │
+└────────────┬────────────┘
+             │
+             ▼
+┌─────────────────────────┐
+│         SQLite          │
+│                         │
+│      Executa SQL        │
+└────────────┬────────────┘
+             │
+             ▼
+┌─────────────────────────┐
+│        Resultado        │
+└────────────┬────────────┘
+             │
+             ▼
+┌─────────────────────────┐
+│        FastAPI          │
+│                         │
+│       Retorna JSON      │
+└─────────────────────────┘
+```
+
+---
+
+# 🤖 Fluxo do Telegram
+
+```text
+┌─────────────────────────┐
+│        Usuário          │
+│                         │
+│ Texto ou áudio          │
+└────────────┬────────────┘
+             │
+             ▼
+┌─────────────────────────┐
+│     Telegram Bot        │
+└────────────┬────────────┘
+             │
+        ┌────┴────┐
+        │         │
+      Texto      Áudio
+        │         │
+        │         ▼
+        │      Whisper
+        │         │
+        │         ▼
+        └────► Texto
+                  │
+                  ▼
+             generate()
+                  │
+                  ▼
+                DSPy
+                  │
+                  ▼
+             Gemma local
+                  │
+                  ▼
+             SQL gerado
+                  │
+                  ▼
+              Validação
+                  │
+                  ▼
+                SQLite
+                  │
+                  ▼
+              Resultado
+                  │
+                  ▼
+            Telegram
+```
+
+---
+
+# 🧵 Arquitetura de execução
+
+A aplicação utiliza o FastAPI como ponto de entrada principal.
+
+O Bot do Telegram é executado em uma thread separada para não bloquear o servidor HTTP.
+
+```text
+                  main.py
+                     │
+          ┌──────────┴──────────┐
+          │                     │
+          ▼                     ▼
+       FastAPI               Thread
+          │                     │
+          │                     ▼
+          │                Telegram Bot
+          │                     │
+          ▼                     ▼
+       Routers              generate()
+          │                     │
+          └──────────┬──────────┘
+                     │
+                     ▼
+                   DSPy
+                     │
+                     ▼
+                Gemma local
+                     │
+                     ▼
+                   SQLite
 ```
 
 ---
 
 # 🚀 Resumo rápido
 
-Depois de clonar/baixar o projeto:
+Depois de clonar ou baixar o projeto:
 
 ### 1. Entre na pasta
 
@@ -1130,63 +1557,77 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-### 5. Inicie o servidor do modelo local
+### 5. Configure o token do Telegram
 
-Certifique-se de que o modelo está disponível em:
+Configure o token utilizado pelo Bot de acordo com o arquivo de configuração do projeto.
+
+Não publique o token no GitHub.
+
+### 6. Inicie o servidor do modelo local
+
+Certifique-se de que o Gemma esteja disponível em:
 
 ```text
 http://localhost:1337/v1
 ```
 
-### 6. Inicie o FastAPI para criar o banco e a tabela
+Teste:
 
 ```powershell
-uvicorn app.main:app --reload
+Test-NetConnection localhost -Port 1337
 ```
 
-### 7. Execute o Seed
-
-Em outro terminal, com a virtual environment ativada e na pasta principal:
+### 7. Inicie a aplicação
 
 ```powershell
-cd Projeto
+uvicorn app.server.main:app --reload
 ```
+
+### 8. Execute o Seed
+
+Em outro terminal:
 
 ```powershell
 python -m app.database.seed
 ```
 
-O resultado esperado:
-
-```text
-4 produtos inseridos com sucesso!
-```
-
-### 8. Abra a documentação
+### 9. Acesse o Swagger
 
 ```text
 http://127.0.0.1:8000/docs
 ```
 
-### 9. Faça uma pergunta
+### 10. Abra o Telegram
 
-```json
-{
-    "question": "qual o departamento do sabonete?"
-}
+Envie:
+
+```text
+/start
+```
+
+Depois faça uma pergunta:
+
+```text
+Qual o departamento do sabonete?
 ```
 
 ---
 
-# 👨‍💻 Projeto acadêmico
+# 🎯 Objetivo do projeto
 
-Projeto desenvolvido como parte das atividades acadêmicas de **Desenvolvimento de Software Multiplataforma / Interação Humano-Computador**.
+O projeto tem como objetivo estudar a integração entre:
 
-O objetivo é estudar a integração entre:
+- 🗣️ Linguagem natural
+- 🤖 Inteligência Artificial
+- 🧠 Modelos de linguagem locais
+- 🔄 Geração automática de SQL
+- 🛡️ Validação de consultas
+- 🌐 APIs REST
+- 🗄️ Banco de dados SQLite
+- 📱 Telegram Bot
+- 🎤 Reconhecimento de voz
+- 🧩 DSPy
 
-* Linguagem natural
-* Inteligência Artificial
-* Geração automática de SQL
-* APIs REST
-* Banco de dados
-* Modelos de linguagem locais
+A aplicação demonstra como uma pergunta feita em linguagem natural pode ser transformada em uma consulta SQL executável utilizando um modelo de linguagem local, passando por uma camada de validação antes do acesso ao banco de dados.
+
+---
