@@ -41,6 +41,7 @@ Projeto/
 │   │
 │   ├── Bot/
 │   │   ├── telegram_bot.py
+│   │   ├── config_bot.py
 │   │   └── env.py
 │   │
 │   ├── config/
@@ -57,17 +58,18 @@ Projeto/
 │   │
 │   ├── server/
 │   │   ├── bd.py
+│   │   ├── seed.py
 │   │   └── main.py
 │   │
 │   ├── services/
 │   │   ├── listar_produto_service.py
+│   │   ├── optmizer_service.py
 │   │   └── sql_service.py
 │   │
 │   └── __init__.py
 │
 ├── .venv/
 ├── .gitignore
-├── lojas.db
 ├── requirements.txt
 └── README.md
 ```

@@ -1,3 +1,19 @@
 fastapi
 uvicorn
 dspy
+pyTelegramBotAPI
+openai-whisper
+python-dotenv
+
+# +---------------------------------------------------+
+# | DICIONÁRIO DE RESPONSABILIDADES DAS DEPENDÊNCIAS  |
+# +---------------------------------------------------+
+# | Pacote             | Uso                          |
+# | ------------------ | ---------------------------- |
+# | fastapi            | API REST                     |
+# | uvicorn            | Servidor da API              |
+# | dspy               | Geração de SQL com o Gemma   |
+# | pyTelegramBotAPI   | Bot do Telegram (telebot)    |
+# | openai-whisper     | Transcrição dos áudios       |
+# | python-dotenv      | Carregar configurações/token |
+# +---------------------------------------------------+
