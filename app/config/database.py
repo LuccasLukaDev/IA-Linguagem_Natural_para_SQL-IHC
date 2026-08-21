@@ -11,4 +11,3 @@ CREATE TABLE IF NOT EXISTS produtos (
     quantidade INTEGER
 );
 """
-

@@ -21,12 +21,37 @@ def start(message):
 
 @bot.message_handler(commands=["listar"])
 def listar(message):
-    resultado = listar_produtos()
+    produtos = listar_produtos()
 
-    bot.reply_to(
-        message,
-        json.dumps(resultado, ensure_ascii=False, indent=2)
-    )
+    if not produtos:
+        bot.reply_to(message, "Nenhum produto encontrado.")
+        return
+
+    resposta = ""
+
+    for produto in produtos:
+        id = produto[0]
+        nome = produto[1]
+        departamento = produto[2]
+        fabricante = produto[3]
+        data_venc = produto[4]
+        data_fabri = produto[5]
+        origem = produto[7]
+        quantidade = produto[8]
+    
+        resposta += (
+            f"🆔 ID: {id}\n"
+            f"📦 Produto: {nome}\n"
+            f"🏢 Departamento: {departamento}\n"
+            f"🏭 Fabricante: {fabricante}\n"
+            f"📅 Data de vencimento: {data_venc}\n"
+            f"📅 Data de fabricação: {data_fabri}\n"
+            f"🌎 Origem: {origem}\n"
+            f"🔢 Quantidade: {quantidade}\n"
+            f"\n"
+        )
+
+    bot.reply_to(message, resposta)
 
 
 @bot.message_handler(content_types=["voice"])
