@@ -1,5 +1,4 @@
-# Ambientes virtuais Python
-venv/
-.venv/
-env/
-ENV/
+# Ignorar arquivos de variáveis de ambiente
+.env
+.env.*
+!.env.example
