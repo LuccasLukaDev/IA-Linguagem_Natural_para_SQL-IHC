@@ -4,6 +4,7 @@ dspy
 pyTelegramBotAPI
 openai-whisper
 python-dotenv
+requests
 
 # +---------------------------------------------------+
 # | DICIONÁRIO DE RESPONSABILIDADES DAS DEPENDÊNCIAS  |
@@ -16,4 +17,5 @@ python-dotenv
 # | pyTelegramBotAPI   | Bot do Telegram (telebot)    |
 # | openai-whisper     | Transcrição dos áudios       |
 # | python-dotenv      | Carregar configurações/token |
+# | requests           | Comunicação HTTP do Bot/API  |
 # +---------------------------------------------------+
