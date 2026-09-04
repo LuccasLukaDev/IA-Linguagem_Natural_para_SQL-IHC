@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
-from app.schemas.pergunta import Pergunta
-from app.services.sql_service import generate
+from app.schemas.sqlQuery import SQLQuery
+from app.services.sql_service import executar_sql
 from app.services.listar_produto_service import listar_produtos
 
 
@@ -12,9 +12,9 @@ router = APIRouter(
 
 
 @router.post("/perguntar")
-def perguntar(pergunta: Pergunta):
+def perguntar(sql_query: SQLQuery):
 
-    resultado = generate(pergunta.question)
+    resultado = executar_sql(sql_query.sql_query)
 
     return {
         "resultado": resultado
@@ -24,8 +24,8 @@ def perguntar(pergunta: Pergunta):
 @router.get("/listar")
 def listar():
 
-    listaProdutos = listar_produtos()
+    lista_produtos = listar_produtos()
 
     return {
-        "resultado" : listaProdutos
+        "resultado": lista_produtos
     }

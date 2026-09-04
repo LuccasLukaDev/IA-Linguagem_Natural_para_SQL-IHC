@@ -21,3 +21,12 @@ Estou passando um agente que implementei completo text2sql integrado com telegra
 7 usar RLM ao invés de CoT para que libs python recursivamente gerem sql bons
  
 --- até novembro ---
+
+./
+    bot.py:
+        - conexão com telegram e IA
+        - metodo main pra startar
+        
+    server.py:
+        - banco de dados (sqlite3)
+        - fastAPI webservice - 1 rota, recebe comando sql via http - entra 1 string sql_query e retorna
