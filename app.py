@@ -14,42 +14,6 @@ from dotenv import load_dotenv
 
 
 # ==============================================================================
-# CONFIGURAÇÃO DO BANCO DE DADOS LOCAL
-# ==============================================================================
-# Define o diretório base do script atual e o caminho completo para o banco de dados
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-db_path = os.path.join(BASE_DIR, "lojas.db")
-
-def create_db():
-  """Cria a tabela 'produtos' no SQLite e insere registros iniciais de exemplo."""
-  conn = sqlite3.connect(db_path)
-  c = conn.cursor()
-
-  # Criação da tabela de produtos com as colunas 'nome' e 'departamento'
-  c.execute("""CREATE TABLE IF NOT EXISTS produtos (
-                nome TEXT, 
-                departamento TEXT
-            )""")
-
-  # Inserção de dados de teste (mock data)
-  c.executemany("INSERT INTO produtos VALUES (?, ?)", [
-    ("sabonete", "higiene"),
-    ("agua", "bebidas"),
-    ("coca", "bebidas"),
-  ])
-
-  conn.commit()  # Salva as alterações
-  conn.close()   # Fecha a conexão
-
-# Executa a função para garantir que o banco e os dados existam
-create_db()
-
-# Teste simples de leitura para verificar se os dados foram inseridos corretamente
-conn = sqlite3.connect(db_path)
-results = conn.execute("SELECT * from produtos").fetchall()
-print(results)
-
-# ==============================================================================
 # CONFIGURAÇÃO DO MODELO DE LINGUAGEM (LLM) VIA DSPY
 # ==============================================================================
 # Conecta a um modelo local servido em um endpoint compatível com OpenAI (ex: Ollama, LM Studio, vLLM)
