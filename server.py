@@ -1,13 +1,20 @@
 # ==============================================================================
-# CAMADA DE DADOS E BANCO DE DADOS LOCAL (SQLITE)
+# SERVIDOR BACKEND DO BANCO DE DADOS (FASTAPI + SQLITE)
 # ==============================================================================
-import sqlite3
 import os
+import sqlite3
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+import uvicorn
 
 # Define o caminho do banco de dados local
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "lojas.db")
 
+
+# ==============================================================================
+# GERENCIADOR DO BANCO DE DADOS SQLITE
+# ==============================================================================
 class DatabaseManager:
     """Gerencia a conexão, validação e execução segura no SQLite."""
     def __init__(self, db_path: str = DB_PATH):
@@ -67,11 +74,67 @@ class DatabaseManager:
 
         return [dict(zip(colunas, linha)) for linha in linhas]
 
-# Instância compartilhada do banco de dados
 db = DatabaseManager()
 
+
+# ==============================================================================
+# CONFIGURAÇÃO DA API FASTAPI DO BANCO DE DADOS
+# ==============================================================================
+api = FastAPI(
+    title="Servidor de Banco de Dados - IHC",
+    description="API REST para encapsulamento e execução segura de consultas SQLite.",
+    version="1.0.0"
+)
+
+class QueryRequest(BaseModel):
+    sql: str
+
+@api.get("/")
+def health_check():
+    """Rota de verificação de status do servidor de banco de dados."""
+    return {
+        "status": "online",
+        "servico": "Servidor de Banco de Dados SQLite (lojas.db)",
+        "docs": "http://127.0.0.1:8000/docs"
+    }
+
+@api.post("/query")
+def execute_query(req: QueryRequest):
+    """Recebe um comando SQL, valida e executa apenas consultas SELECT."""
+    sql = req.sql.strip().rstrip(";")
+    print(f"[INFO] SQL recebido no servidor: {sql}")
+
+    # 1. Trava de segurança: apenas consultas SELECT
+    if not sql.upper().startswith("SELECT"):
+        print("[AVISO] Comando bloqueado no servidor: apenas consultas SELECT sao permitidas.")
+        raise HTTPException(
+            status_code=400,
+            detail="Comando bloqueado: apenas consultas SELECT são permitidas."
+        )
+
+    # 2. Validação e Execução no SQLite
+    try:
+        resultados = db.execute_query(sql)
+        print(f"[INFO] Consulta executada no SQLite. Registros retornados: {len(resultados)}")
+        return {
+            "sucesso": True,
+            "query": sql,
+            "total": len(resultados),
+            "dados": resultados
+        }
+    except sqlite3.Error as e:
+        print(f"[ERRO] Falha no SQLite: {e}")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Erro na consulta SQLite: {str(e)}"
+        )
+
+
+# ==============================================================================
+# INICIALIZAÇÃO DO SERVIDOR (UVICORN)
+# ==============================================================================
 if __name__ == "__main__":
     db.init_db()
-    print("[INFO] Banco de dados inicializado em lojas.db")
-    produtos = db.execute_query("SELECT * FROM produtos")
-    print(f"[INFO] Total de produtos cadastrados: {len(produtos)}")
+    print("[INFO] Servidor de Banco de Dados iniciando em http://127.0.0.1:8000")
+    print("[INFO] Documentação Swagger acessível em http://127.0.0.1:8000/docs")
+    uvicorn.run(api, host="127.0.0.1", port=8000)
