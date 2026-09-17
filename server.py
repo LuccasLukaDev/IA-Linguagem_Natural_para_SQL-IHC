@@ -89,16 +89,7 @@ api = FastAPI(
 class QueryRequest(BaseModel):
     sql: str
 
-@api.get("/")
-def health_check():
-    """Rota de verificação de status do servidor de banco de dados."""
-    return {
-        "status": "online",
-        "servico": "Servidor de Banco de Dados SQLite (lojas.db)",
-        "docs": "http://127.0.0.1:8000/docs"
-    }
-
-@api.post("/query")
+@api.post("/")
 def execute_query(req: QueryRequest):
     """Recebe um comando SQL, valida e executa apenas consultas SELECT."""
     sql = req.sql.strip().rstrip(";")
@@ -135,6 +126,4 @@ def execute_query(req: QueryRequest):
 # ==============================================================================
 if __name__ == "__main__":
     db.init_db()
-    print("[INFO] Servidor de Banco de Dados iniciando em http://127.0.0.1:8000")
-    print("[INFO] Documentação Swagger acessível em http://127.0.0.1:8000/docs")
     uvicorn.run(api, host="127.0.0.1", port=8000)

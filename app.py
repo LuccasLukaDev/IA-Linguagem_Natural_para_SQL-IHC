@@ -15,7 +15,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 load_dotenv(os.path.join(BASE_DIR, ".env"))
 
 # URL do servidor backend de banco de dados (FastAPI em server.py)
-DB_SERVER_URL = os.getenv("DB_SERVER_URL", "http://127.0.0.1:8000/query")
+DB_SERVER_URL = os.getenv("DB_SERVER_URL", "http://127.0.0.1:8000/")
 
 
 # ==============================================================================
