@@ -1,6 +1,10 @@
-# Ambientes virtuais Python
+# Ignorar arquivos de variáveis de ambiente
+.env
+.env.*
+!.env.example
 venv/
 .venv/
+<<<<<<< HEAD
 env/
 ENV/
 __pycache__/
@@ -11,3 +15,7 @@ __pycache__/
 # .env
 env.py
 .env
+=======
+__pycache__/
+.__pycache__/
+>>>>>>> reset
