@@ -47,27 +47,8 @@ class ReliableSQLGenerator(dspy.Module):
 
     def forward(self, schema, question):
         return self.generate_sql(schema=schema, question=question)
-
-class RespostaAmigavel(dspy.Signature):
-    """Responda à pergunta do usuário de forma clara, educada e natural em português,
-    baseando-se exclusivamente nos dados retornados do banco de dados.
-    """
-    question = dspy.InputField(desc="Pergunta feita pelo usuário")
-    data = dspy.InputField(desc="Dados obtidos do banco de dados em formato JSON")
-    answer = dspy.OutputField(desc="Resposta final amigável em linguagem natural para o usuário")
-
-class NaturalLanguageResponder(dspy.Module):
-    """Módulo DSPy que formula uma resposta em linguagem natural a partir dos dados obtidos."""
-    def __init__(self):
-        super().__init__()
-        self.responder = dspy.ChainOfThought(RespostaAmigavel)
-
-    def forward(self, question, data):
-        return self.responder(question=question, data=data)
-
-# Instanciação dos geradores de IA
+# Instanciação do gerador Text-to-SQL
 sql_generator = ReliableSQLGenerator()
-nl_responder = NaturalLanguageResponder()
 
 DB_SCHEMA = "produtos (id, nome, departamento, fabricante, data_venc, data_fabri, cod_barra, origem, quantidade)"
 
@@ -75,24 +56,33 @@ DB_SCHEMA = "produtos (id, nome, departamento, fabricante, data_venc, data_fabri
 # ==============================================================================
 # 4. MOTOR DE PROCESSAMENTO (CORE PIPELINE)
 # ==============================================================================
-def consultar_banco(sql: str) -> list[dict]:
+def consultar_banco(sql: str) -> dict:
     """Envia a consulta SQL para a API do banco de dados (server.py) via HTTP POST."""
     try:
         response = requests.post(DB_SERVER_URL, json={"sql": sql}, timeout=10)
         if response.status_code == 200:
-            body = response.json()
-            return body.get("dados", [])
+            return response.json()
         else:
             try:
                 detalhe = response.json().get("detail", response.text)
             except Exception:
                 detalhe = response.text
-            raise Exception(f"Servidor retornou erro ({response.status_code}): {detalhe}")
+            return {
+                "sucesso": False,
+                "query": sql,
+                "erro": f"Servidor retornou erro ({response.status_code}): {detalhe}",
+                "dados": []
+            }
     except requests.exceptions.ConnectionError:
-        raise Exception("Não foi possível conectar ao servidor de banco de dados (http://127.0.0.1:8000). Certifique-se de que o server.py está em execução.")
+        return {
+            "sucesso": False,
+            "query": sql,
+            "erro": "Não foi possível conectar ao servidor de banco de dados (http://127.0.0.1:8000). Certifique-se de que o server.py está em execução.",
+            "dados": []
+        }
 
 def process_question(text: str) -> dict:
-    """Pipeline central: Pergunta -> Geração SQL (DSPy) -> Trava Segurança -> API server.py -> Resposta Amigável (DSPy)."""
+    """Pipeline central: Pergunta -> Geração SQL (DSPy) -> Trava Segurança -> API server.py -> JSON."""
     print(f"[INFO] Pergunta recebida: {text}")
 
     # 1. Gera o comando SQL com a IA
@@ -107,53 +97,20 @@ def process_question(text: str) -> dict:
         print("[AVISO] Comando bloqueado no app.py: apenas consultas SELECT sao permitidas.")
         return {
             "sucesso": False,
-            "sql": sql,
-            "resposta": "Desculpe, só posso realizar consultas de busca e listagem no banco de dados.",
+            "query": sql,
+            "erro": "Comando bloqueado: apenas consultas SELECT são permitidas.",
             "dados": []
         }
 
-    # 4. Executa a consulta via HTTP no servidor do banco (server.py)
-    try:
-        resultados = consultar_banco(sql)
-        print(f"[INFO] Resposta do servidor recebida. Registros encontrados: {len(resultados)}")
-    except Exception as e:
-        print(f"[ERRO] Falha ao consultar o servidor de banco de dados: {e}")
-        return {
-            "sucesso": False,
-            "sql": sql,
-            "resposta": f"Não foi possível consultar os dados. Motivo: {str(e)}",
-            "dados": []
-        }
-
-    if not resultados:
-        return {
-            "sucesso": True,
-            "sql": sql,
-            "resposta": "Não encontrei nenhum produto correspondente à sua busca.",
-            "dados": []
-        }
-
-    # 5. Gera a resposta em linguagem natural usando DSPy
-    dados_json = json.dumps(resultados, ensure_ascii=False)
-    try:
-        pred_resposta = nl_responder(question=text, data=dados_json)
-        resposta_final = pred_resposta.answer.strip()
-    except Exception as err:
-        print(f"[AVISO] Falha ao gerar resposta amigável via IA: {err}")
-        resposta_final = f"Encontrei os seguintes dados: {dados_json}"
-
-    print(f"[INFO] Resposta amigável gerada: {resposta_final}")
-    return {
-        "sucesso": True,
-        "sql": sql,
-        "resposta": resposta_final,
-        "dados": resultados
-    }
+    # 4. Executa a consulta via HTTP no servidor do banco (server.py) e retorna o JSON
+    resultado = consultar_banco(sql)
+    print(f"[INFO] Resposta do servidor recebida: {resultado}")
+    return resultado
 
 def generate(text: str) -> str:
-    """Função utilitária que retorna apenas o texto da resposta para o Telegram."""
+    """Função utilitária que retorna o JSON do servidor formatado como texto para o Telegram."""
     resultado = process_question(text)
-    return resultado["resposta"]
+    return json.dumps(resultado, indent=2, ensure_ascii=False)
 
 
 # ==============================================================================
@@ -201,7 +158,6 @@ def transcribe_voice_message(message):
     result = generate(text)
     bot.reply_to(message, result)
     print("[INFO] Resposta enviada ao usuário.")
-
 
 # ==============================================================================
 # 7. PONTO DE ENTRADA E INICIALIZAÇÃO DO BOT TELEGRAM
