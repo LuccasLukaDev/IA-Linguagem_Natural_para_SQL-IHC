@@ -1,7 +1,7 @@
 import dspy
 
 from app.config.database import DB_SCHEMA
-from app.services.sql_service import ReliableSQLGenerator
+from app.Bot.config_bot import ReliableSQLGenerator
 from dspy.teleprompt import GEPA
 
 
